@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuaStat · 轻量质量统计工作台</title>
+<meta name="description" content="QuaStat：单个 HTML 文件的质量统计分析工作台，数据只在本地浏览器中处理。">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="wrap">
+<header class="site"><a class="name" href="/">Ben Xu</a><nav><a href="/quastat/">QuaStat</a><a href="https://x.com/benjaminxu2023" rel="me noopener">X</a></nav></header>
+<main>
+<h1>QuaStat</h1>
+<p class="lead">轻量的质量统计分析工作台。单个 HTML 文件，中英文界面可切换。</p>
+<div class="cta"><a class="btn" href="/quastat/app/">在线打开</a></div>
+<p class="note">数据只在本地浏览器中处理，不会上传。推荐使用 Chrome 或 Edge。</p>
+
+<h2>功能</h2>
+<ul>
+  <li>描述性统计</li>
+  <li>正态性检验（Anderson–Darling）</li>
+  <li>过程能力：Cp/Cpk、Pp/Ppk、Cpm，可按 Cavity 分组比较</li>
+  <li>Xbar-R / I-MR 控制图</li>
+  <li>Gage R&amp;R</li>
+  <li>t 检验、单因素 ANOVA、线性回归</li>
+  <li>主效应分析、DOE 设计生成器</li>
+  <li>常用图形和 Graph Builder</li>
+</ul>
+<p>无需安装或构建，在浏览器中打开即可使用。</p>
+
+<figure><img src="/quastat/img/worksheet.png" alt="QuaStat 工作表（内置示例数据）" width="1280" height="900" loading="lazy"><figcaption>工作表：内置示例数据（「载入示例」）</figcaption></figure>
+<figure><img src="/quastat/img/capability.png" alt="QuaStat 过程能力分析结果（内置示例数据）" width="1280" height="900" loading="lazy"><figcaption>过程能力分析：示例数据，LSL 9.9 / USL 10.1，组内σ 默认用单值 MR(2)</figcaption></figure>
+
+<h2>数值验证</h2>
+<p>计算结果与多个独立来源逐项比对，作为持续集成的硬门禁：任何一项超出容差，测试即失败。</p>
+<ul>
+  <li>独立实现：Python（numpy / scipy / statsmodels）与 R（base R、nortest）</li>
+  <li>NIST StRD 认证数据集：单变量统计 9 个、单因素 ANOVA 11 个、线性回归 Norris</li>
+  <li>NIST/SEMATECH e-Handbook 例题（过程能力、t 检验数据、控制图系数）</li>
+  <li>Monte Carlo（已知真值，检验 d2、c4 等常数）</li>
+</ul>
+<p>当前版本在持续集成中 1006 项检查全部通过。主要约定：过程能力默认用单值 MR(2) 估算组内σ；空白单元格按缺失处理（不当 0）；Cpm 按 Minitab 的定义计算。</p>
+<p>尚未有公开认证数据对照的部分：Gage R&amp;R、Welch t 检验（只与 Python、R 独立实现比对），主效应与 DOE 设计（只与 Python 比对）；回归只支持一元线性。</p>
+<p class="note">这是软件数值验证，不等同于医疗器械质量体系下的正式软件确认（validation）。用于正式记录前，请按贵司程序自行确认。</p>
+<div class="cta"><a class="btn" href="/quastat/app/">在线打开</a></div>
+</main>
+<footer><a href="/">← 返回首页</a></footer>
+</div>
+</body>
+</html>

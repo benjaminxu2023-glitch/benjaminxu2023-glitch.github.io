@@ -1,0 +1,32 @@
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:#1d2733;background:#f6f8fa;line-height:1.7}
+a{color:#1f5f99}
+.wrap{max-width:860px;margin:0 auto;padding:24px 18px 48px}
+header.site{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+header.site .name{font-weight:700;font-size:18px;color:#1d2733;text-decoration:none}
+header.site nav a{margin-left:16px;text-decoration:none}
+h1{font-size:26px;line-height:1.35;margin:0 0 10px}
+h2{font-size:20px;margin:32px 0 12px}
+p{margin:0 0 12px}
+.lead{font-size:17px;color:#3b4754}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:16px}
+.card{background:#fff;border:1px solid #d8dee4;border-radius:10px;padding:18px;display:flex;flex-direction:column}
+.card h3{margin:0 0 6px;font-size:18px}
+.card p{color:#4b5563;font-size:15px;flex:1}
+.card .links a{margin-right:14px}
+.btn{display:inline-block;background:#1f5f99;color:#fff;text-decoration:none;font-weight:600;padding:12px 26px;border-radius:8px;font-size:17px}
+.btn:hover{background:#174a78}
+.btn.secondary{background:#fff;color:#1f5f99;border:1px solid #1f5f99}
+.cta{margin:20px 0 8px;display:flex;gap:12px;flex-wrap:wrap}
+ul{padding-left:22px;margin:0 0 12px}
+li{margin:4px 0}
+figure{margin:18px 0}
+figure img{width:100%;height:auto;border:1px solid #d8dee4;border-radius:8px;background:#fff}
+figcaption{font-size:14px;color:#64748b;margin-top:6px}
+.note{background:#fff8e6;border:1px solid #f2d48a;border-radius:8px;padding:12px 14px;font-size:15px}
+table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
+th,td{border:1px solid #d8dee4;padding:6px 8px;text-align:left}
+.tbl{overflow-x:auto}
+footer{margin-top:40px;font-size:14px;color:#64748b}
+@media (max-width:520px){h1{font-size:22px}.btn{display:block;text-align:center}header.site nav a{margin:0 14px 0 0}}

@@ -1,0 +1,2455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>QuaStat V5.5.0 — Quality Analytics Workbench (中文 / English)</title>
+<style>
+:root{
+  --bg:#f5f7fa;--panel:#fff;--line:#d9dee7;--text:#1d2733;--muted:#64748b;
+  --accent:#1f5f99;--accent2:#2f7f5f;--warn:#b66a00;--danger:#b42318;--ok:#067647;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;align-items:center;gap:16px;padding:10px 16px;background:#17324d;color:#fff;position:sticky;top:0;z-index:10}
+header h1{font-size:18px;margin:0}
+header span{font-size:12px;opacity:.8}
+.topbar{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+button,select,input,textarea{font:inherit}
+button{border:1px solid #c8d0db;background:#fff;border-radius:7px;padding:7px 10px;cursor:pointer}
+button:hover{background:#eef4f8}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.good{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+button.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.layout{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{background:#eef2f6;border-right:1px solid var(--line);padding:12px;overflow:auto}
+.sidebar h3{font-size:13px;text-transform:uppercase;color:var(--muted);margin:14px 4px 8px}
+.sidebar button{display:block;width:100%;text-align:left;margin:5px 0}
+.main{padding:12px;overflow:auto}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tab{padding:7px 11px;border-radius:7px;background:#e9edf3;border:1px solid var(--line);cursor:pointer}
+.tab.active{background:#fff;border-color:#9fb3c8;font-weight:600}
+.view{display:none}
+.view.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.card h2,.card h3{margin:0 0 10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:7px;padding:7px;background:#fff}
+textarea{min-height:120px;resize:vertical}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;max-height:58vh;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border:1px solid #e1e6ed;padding:5px 7px;white-space:nowrap;text-align:right}
+th{background:#edf2f7;position:sticky;top:0;z-index:1}
+th:first-child,td:first-child{text-align:center;background:#f7f9fb;position:sticky;left:0}
+td[contenteditable="true"]{min-width:78px;background:#fff}
+.session{background:#0f172a;color:#d7e1ee;padding:12px;border-radius:8px;min-height:420px;white-space:pre-wrap;font-family:Consolas,monospace;font-size:12px;overflow:auto}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpi{background:#f7f9fc;border:1px solid var(--line);border-radius:8px;padding:10px}
+.kpi b{display:block;font-size:18px;margin-top:3px}
+.status-ok{color:var(--ok)} .status-bad{color:var(--danger)} .status-warn{color:var(--warn)}
+canvas{display:block;width:100%;height:auto;max-width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+#chartCanvas{aspect-ratio:1100/420}
+#graphCanvas{aspect-ratio:1100/460}
+.graph-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.graph-options{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.group-builder{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.group-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.group-chip{display:inline-flex;align-items:center;gap:6px;background:#e8eef5;border:1px solid #cbd5e1;border-radius:16px;padding:4px 8px;font-size:12px}
+.group-chip button{padding:0 4px;border:0;background:transparent;color:#b42318}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.legend span{font-size:12px;color:var(--muted)}
+.small{font-size:12px;color:var(--muted)}
+.badge{display:inline-block;padding:3px 7px;border-radius:12px;background:#e8eef5;font-size:11px;margin-right:4px}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{border-right:0;border-bottom:1px solid var(--line)}
+  .grid2,.grid3,.kpis{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>QuaStat V5.5.0</h1><span>Independent Quality Analytics Workbench · 中文 / English</span>
+  <div class="topbar">
+    <button id="langBtn" class="no-i18n" onclick="toggleLang()" title="Switch interface language / 切换界面语言" style="font-weight:600">🌐 EN</button>
+    <button onclick="undoLastStep()" title="撤销工作表上一步操作（编辑单元格、导入、新增/清空等）">↩ 撤销上一步</button>
+    <button onclick="repeatLastAction()" title="重复上一次点击的左侧栏功能">↻ 重复上一步</button>
+    <select id="repeatMode" title="选择“重复上一步”的行为" style="width:auto">
+      <option value="reopen">仅重新打开</option>
+      <option value="rerun">保留参数并运行</option>
+    </select>
+    <button onclick="loadDemo()">载入示例</button>
+    <button onclick="saveProject()">保存项目</button>
+    <button onclick="loadProject()">恢复项目</button>
+    <button onclick="exportSession()">导出 Session</button>
+  </div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+  <h3>数据</h3>
+  <button onclick="showTab('worksheet')">工作表</button>
+  <button onclick="showTab('import')">导入 CSV / 粘贴</button>
+  <h3>基础统计</h3>
+  <button onclick="openAnalysis('desc')">描述性统计</button>
+  <button onclick="openAnalysis('normality')">正态性检验</button>
+  <button onclick="openAnalysis('capability')">过程能力</button>
+  <h3>控制图</h3>
+  <button onclick="openAnalysis('xbarR')">Xbar-R</button>
+  <button onclick="openAnalysis('imr')">I-MR</button>
+  <h3>质量工程</h3>
+  <button onclick="openAnalysis('grr')">Gage R&R</button>
+  <button onclick="openAnalysis('ttest')">t 检验</button>
+  <button onclick="openAnalysis('anova')">单因素 ANOVA</button>
+  <button onclick="openAnalysis('regression')">线性回归</button>
+  <button onclick="openAnalysis('maineffects')">主效应分析</button>
+  <button onclick="openAnalysis('doe')">DOE 设计生成器</button>
+  <h3>输出</h3>
+  <button onclick="showTab('session')">Session 输出</button>
+  <button onclick="showTab('charts')">图表</button>
+  <h3>Graph Builder</h3>
+  <button onclick="openGraph('histogram')">直方图</button>
+  <button onclick="openGraph('boxplot')">箱线图</button>
+  <button onclick="openGraph('individual')">单值图</button>
+  <button onclick="openGraph('scatter')">散点图</button>
+  <button onclick="openGraph('dotplot')">点图</button>
+  <button onclick="openGraph('timeseries')">时间序列图</button>
+  <button onclick="openGraph('pareto')">Pareto 图</button>
+</aside>
+
+<main class="main">
+  <div class="tabs">
+    <div class="tab active" data-tab="worksheet" onclick="showTab('worksheet')">Worksheet</div>
+    <div class="tab" data-tab="import" onclick="showTab('import')">Import</div>
+    <div class="tab" data-tab="analysis" onclick="showTab('analysis')">Analysis</div>
+    <div class="tab" data-tab="session" onclick="showTab('session')">Session</div>
+    <div class="tab" data-tab="charts" onclick="showTab('charts')">Charts</div>
+    <div class="tab" data-tab="graphbuilder" onclick="showTab('graphbuilder')">Graph Builder</div>
+  </div>
+
+  <section id="worksheet" class="view active">
+    <div class="card">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div>
+          <h2>工作表</h2>
+          <div class="small">双击列名可修改；单元格可直接编辑。缺失值留空。</div>
+        </div>
+        <div>
+          <button onclick="addColumn()">新增列</button>
+          <button onclick="addRows(10)">新增10行</button>
+          <button class="danger" onclick="clearData()">清空</button>
+        </div>
+      </div>
+      <div id="worksheetTable" class="table-wrap"></div>
+    </div>
+  </section>
+
+  <section id="import" class="view">
+    <div class="card">
+      <h2>导入 CSV / TSV</h2>
+      <div class="grid2">
+        <div>
+          <label>粘贴包含表头的数据</label>
+          <textarea id="importText" placeholder="Measurement,Subgroup,Part,Operator&#10;10.02,1,P1,A"></textarea>
+        </div>
+        <div>
+          <label>分隔符</label>
+          <select id="delimiter">
+            <option value="auto">自动识别</option>
+            <option value=",">逗号</option>
+            <option value="tab">Tab</option>
+            <option value=";">分号</option>
+          </select>
+          <br><br>
+          <button class="primary" onclick="importData()">导入并覆盖工作表</button>
+          <button onclick="appendData()">追加数据</button>
+          <p class="small">支持 Excel 复制粘贴。第一行默认作为列名。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="analysis" class="view">
+    <div class="card">
+      <h2 id="analysisTitle">分析</h2>
+      <div id="analysisForm"></div>
+    </div>
+    <div id="analysisResult" class="card"></div>
+  </section>
+
+  <section id="session" class="view">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Session</h2><button onclick="sessionLog='' ; renderSession()">清空输出</button>
+      </div>
+      <div id="sessionBox" class="session"></div>
+    </div>
+  </section>
+
+
+  <section id="graphbuilder" class="view">
+    <div class="card">
+      <h2 id="graphTitle">Graph Builder</h2>
+      <div id="graphForm"></div>
+    </div>
+    <div class="card">
+      <h3>图形预览</h3>
+      <canvas id="graphCanvas" width="1100" height="460"></canvas>
+      <div id="graphSummary" class="small" style="margin-top:8px">选择变量后生成图形。</div>
+    </div>
+  </section>
+
+  <section id="charts" class="view">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h2>图表窗口</h2>
+        <button onclick="exportChartPNG()">导出高清 PNG</button>
+      </div>
+      <div id="chartModeBar" style="display:none;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <span class="small">分层视图：</span>
+        <button id="chartModeStackBtn" onclick="setChartMode('stack')">堆叠显示（全部）</button>
+        <button id="chartModeSingleBtn" onclick="setChartMode('single')">单个查看</button>
+        <select id="chartCavityPicker" onchange="renderSingleCavityChart()" style="display:none;width:auto"></select>
+      </div>
+      <div id="chartsContainer"><canvas id="chartCanvas" width="1100" height="420"></canvas></div>
+      <div id="chartNote" class="small" style="margin-top:8px">运行统计分析后，这里显示图表。</div>
+    </div>
+  </section>
+</main>
+</div>
+
+<script>
+let columns = ["Measurement","Subgroup","Part","Operator","Response","Factor"];
+let rows = Array.from({length:24},()=>Array(columns.length).fill(""));
+let sessionLog = "QuaStat V5.4.2 Session\nIndependent implementation for quality engineering.\nV5.2: added Main Effects Analysis; data labels + axis ticks on all charts; fixed chart-tab blur bug, Xbar-R/I-MR dual panels, boxplot whisker logic, exact t/F p-values, Minitab-style quantiles.\nV5.3: Xbar-R and I-MR now support optional stratification by Cavity (or any column) — each level gets its own independently computed control limits instead of being pooled; Charts tab gained a stacked-all / single-cavity-picker toggle.\nV5.4: added Minitab-style Process Capability Sixpack (Xbar/I + R/MR + Last 25 Subgroups + Capability Histogram with Within & Overall curves + Normal Prob Plot with AD/P + Capability Plot) and Gage R&R Sixpack (Components of Variation + R Chart by Op + Xbar Chart by Op + Meas by Part + Meas by Op + Part*Op Interaction).\nV5.4.1: rebuilt Gage R&R engine to full Two-Way ANOVA (crossed, with interaction) matching Minitab exactly (verified vs Micro-Vu OMM 24586: %Contribution 7.32/92.68, %Tolerance 4.89/17.41/18.08, ndc=5 all match to 4 decimals); alpha-to-remove-interaction=0.25 rule; full ANOVA + VarComp + StdDev tables now emitted; fixed GRR Sixpack leaving blank default canvas.\nV5.4.2: FIXED — Process Capability (both single-run and Sixpack) now supports one-sided tolerances. Root cause: (1) validation forced both LSL and USL to be finite before running; (2) blank input fields parsed via Number('') === 0, silently treated as a real 0 spec limit instead of 'not specified'. Fix: new parseSpecInput() treats blank as NaN; validation now accepts either LSL-only, USL-only, or both (only rejects if both blank, or if both given with USL<=LSL). capabilityStats() now computes Cpu=(USL-Mean)/(3*Within) / Cpl=(Mean-LSL)/(3*Within) and Ppu/Ppl accordingly; Cp/Pp report as N/A ('—') for one-sided specs (Minitab convention), while Cpk/Ppk labels are kept as-is and equal Cpu/Ppu or Cpl/Ppl per user's choice. All capability charts (histogram spec lines, Capability Plot in/out-of-spec shading, Sixpack) updated to skip the missing limit instead of rendering NaN.\nV5.5.0: BILINGUAL — added a 中文 / English (EN/CH) interface toggle in the top bar. Implemented as a non-invasive runtime i18n layer: a phrase dictionary + DOM TreeWalker + MutationObserver translate every static and dynamically generated element (sidebar, tabs, forms, labels, result tables, notes, tooltips, alert/confirm/prompt dialogs), and restore the original Chinese when switching back. Worksheet cells, the Import text box and this Session log are deliberately excluded so user data and the audit trail are never altered. Language choice is persisted in localStorage (key: quastat_lang).\n\n";
+
+function showTab(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const t=document.querySelector(`.tab[data-tab="${id}"]`); if(t)t.classList.add('active');
+}
+function renderWorksheet(){
+  let h='<table><thead><tr><th>#</th>';
+  columns.forEach((c,i)=>h+=`<th ondblclick="renameColumn(${i})">C${i+1}<br>${esc(c)}</th>`);
+  h+='</tr></thead><tbody>';
+  rows.forEach((r,ri)=>{
+    h+=`<tr><td>${ri+1}</td>`;
+    columns.forEach((_,ci)=>h+=`<td contenteditable="true" onfocus="cellFocusSnapshot(${ri},${ci})" oninput="editCell(${ri},${ci},this.innerText)">${esc(r[ci]??"")}</td>`);
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById('worksheetTable').innerHTML=h;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+/* ---------- undo / recall-last-step history for worksheet data ---------- */
+const MAX_HISTORY=25;
+let history=[];
+let cellEditPending=false; // tracks whether the currently-focused cell has already been snapshotted
+function snapshot(label){
+  history.push({columns:JSON.parse(JSON.stringify(columns)),rows:JSON.parse(JSON.stringify(rows)),label});
+  if(history.length>MAX_HISTORY)history.shift();
+}
+function cellFocusSnapshot(r,c){
+  cellEditPending=false; // reset per-cell guard; the first edit in THIS cell will snapshot once
+}
+function editCell(r,c,v){
+  if(!cellEditPending){snapshot(`编辑单元格 R${r+1}C${c+1}`);cellEditPending=true}
+  rows[r][c]=v.trim();
+}
+function undoLastStep(){
+  if(!history.length)return alert('没有可撤销的操作。');
+  const prev=history.pop();
+  columns=prev.columns;rows=prev.rows;cellEditPending=false;
+  renderWorksheet();showTab('worksheet');
+  log(`撤销操作：已恢复到「${prev.label}」之前的状态\n`);
+}
+
+/* ---------- repeat last action: replay the last SIDEBAR (left column) button clicked ---------- */
+let lastSidebarAction=null; // {kind:'analysis'|'graph', type} — set whenever a left-column tool button opens a form
+const paramCache={};        // per-tool cache of {fnCallStr,values,groups} from the last time THAT tool was run
+const TRACK_FIELDS={
+  analysis:{
+    desc:['descCol'], normality:['normalityCol'],
+    capability:['capCol','lsl','usl','target','cpkLimit','sigmaMethod','subgroup','subSize','cavityCol'],
+    xbarR:['xrCol','xrSub','xrGroup'], imr:['imrCol','imrGroup'], ttest:['t1','t2'], anova:['aResp','aFactor'],
+    regression:['regY','regX'], maineffects:['meResp'], grr:['gVal','gPart','gOp','gTol'],
+    doe:['doeN','doeRep','doeRand']
+  },
+  graph:{
+    histogram:['gHistCol','gHistBins','gHistMean'], boxplot:['gBoxVal','gBoxOut'],
+    individual:['gIndVal','gIndLine'], scatter:['gScX','gScY','gScFit'],
+    dotplot:['gDotVal','gDotDec'], timeseries:['gTsVal','gTsTime','gTsMA'],
+    pareto:['gParCat','gParFreq','gParCum']
+  }
+};
+const TRACK_GROUPS={
+  analysis:{maineffects:['meFactors']},
+  graph:{boxplot:['gBoxGroups'],individual:['gIndGroups'],scatter:['gScGroups'],dotplot:['gDotGroups']}
+};
+function trackSidebarOpen(kind,type){lastSidebarAction={kind,type}}
+function runTracked(kind,type,fnCallStr){
+  const fieldIds=(TRACK_FIELDS[kind]&&TRACK_FIELDS[kind][type])||[];
+  const groupIds=(TRACK_GROUPS[kind]&&TRACK_GROUPS[kind][type])||[];
+  const values={};
+  fieldIds.forEach(id=>{const el=document.getElementById(id);if(el)values[id]=el.value});
+  const groups={};
+  groupIds.forEach(id=>{groups[id]=[...(graphGroupState[id]||[])]});
+  paramCache[kind+':'+type]={fnCallStr,values,groups};
+  eval(fnCallStr);
+}
+function repeatLastAction(){
+  if(!lastSidebarAction)return alert('没有可重复的操作，请先在左侧选择一个功能。');
+  const {kind,type}=lastSidebarAction;
+  const mode=document.getElementById('repeatMode')?document.getElementById('repeatMode').value:'reopen';
+  if(kind==='analysis')openAnalysis(type); else openGraph(type);
+  if(mode==='rerun'){
+    const cached=paramCache[kind+':'+type];
+    if(cached){
+      Object.entries(cached.groups||{}).forEach(([id,arr])=>{graphGroupState[id]=[...arr];renderGraphGroups(id)});
+      Object.entries(cached.values||{}).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v});
+      eval(cached.fnCallStr);
+      log(`重复操作（保留参数并运行）：${kind==='analysis'?'分析':'图形'} — ${type}\n`);
+      return;
+    }
+    log(`重复操作：${kind==='analysis'?'分析':'图形'} — ${type}（该工具尚无历史参数，仅重新打开）\n`);
+    return;
+  }
+  log(`重复操作（仅重新打开）：${kind==='analysis'?'分析':'图形'} — ${type}\n`);
+}
+
+
+function renameColumn(i){const n=prompt("新列名",columns[i]);if(n){snapshot(`重命名列 C${i+1}`);columns[i]=n.trim();renderWorksheet()}}
+function addColumn(){snapshot('新增列');columns.push("Column"+(columns.length+1));rows.forEach(r=>r.push(""));renderWorksheet()}
+function addRows(n){snapshot(`新增${n}行`);for(let i=0;i<n;i++)rows.push(Array(columns.length).fill(""));renderWorksheet()}
+function clearData(){if(confirm("确定清空工作表？")){snapshot('清空工作表');rows=Array.from({length:20},()=>Array(columns.length).fill(""));renderWorksheet()}}
+function parseText(txt){
+  let delim=document.getElementById('delimiter').value;
+  if(delim==="auto") delim=txt.includes("\t")?"\t":(txt.includes(";")?";":",");
+  if(delim==="tab")delim="\t";
+  const lines=txt.trim().split(/\r?\n/).filter(Boolean);
+  return lines.map(line=>line.split(delim).map(x=>x.trim()));
+}
+function importData(){
+  const m=parseText(document.getElementById('importText').value); if(m.length<2)return alert("至少需要表头和一行数据");
+  snapshot('导入 CSV（覆盖）');
+  columns=m[0]; rows=m.slice(1).map(r=>columns.map((_,i)=>r[i]??"")); renderWorksheet();showTab('worksheet');
+}
+function appendData(){
+  const m=parseText(document.getElementById('importText').value); if(m.length<2)return;
+  if(m[0].join("|")!==columns.join("|"))return alert("追加数据的表头必须与当前工作表一致");
+  snapshot('追加 CSV 数据');
+  rows.push(...m.slice(1).map(r=>columns.map((_,i)=>r[i]??"")));renderWorksheet();showTab('worksheet');
+}
+function saveProject(){localStorage.setItem('quastat_v51',JSON.stringify({columns,rows,sessionLog}));alert("已保存到浏览器本地")}
+function loadProject(){const x=localStorage.getItem('quastat_v51');if(!x)return alert("未找到已保存项目");const o=JSON.parse(x);snapshot('恢复已保存项目（覆盖工作表）');columns=o.columns;rows=o.rows;sessionLog=o.sessionLog||"";renderWorksheet();renderSession();alert("项目已恢复")}
+function exportSession(){
+  const blob=new Blob([sessionLog],{type:"text/plain;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="QuaStat_V51_Session.txt";a.click();URL.revokeObjectURL(a.href)
+}
+function renderSession(){document.getElementById('sessionBox').textContent=sessionLog}
+function log(txt){sessionLog+=txt+"\n";renderSession()}
+// Worksheet cell -> number. Blank / whitespace / null / non-numeric => NaN (treated as missing, skipped).
+// Fixes Number("")===0: blank cells used to be read as 0. Real zeros ("0", 0) are kept.
+function cellNum(v){if(v===null||v===undefined)return NaN;if(typeof v==='number')return v;const t=String(v).trim();if(t==='')return NaN;return Number(t)}
+function rowIsBlank(r){return r.every(v=>v===null||v===undefined||String(v).trim()==='')}
+// count of non-empty rows whose cell in column vi is blank or non-numeric (skipped as missing)
+function countSkipped(vi,src){return (src||rows).filter(r=>!rowIsBlank(r)&&!Number.isFinite(cellNum(r[vi]))).length}
+function nums(col){const i=columns.indexOf(col);return rows.map(r=>cellNum(r[i])).filter(Number.isFinite)}
+function skippedNote(col){const k=countSkipped(columns.indexOf(col));return k?`<p class="small status-warn">ℹ️ 已跳过 ${k} 行空白或非数值单元格（按缺失处理，不计为 0）。</p>`:''}
+function vals(col){const i=columns.indexOf(col);return rows.map(r=>r[i]).filter(v=>v!=="")}
+function colOptions(){return columns.map(c=>`<option>${esc(c)}</option>`).join("")}
+// corrected two-pass mean: naive mean, then add the mean residual. Keeps full precision for data with many
+// constant leading digits (NIST StRD SmLs07-09: values ~1e12, where a naive sum loses the fractional part).
+function mean(a){const n=a.length;if(!n)return NaN;let s=0;for(const x of a)s+=x;const m0=s/n;let r=0;for(const x of a)r+=x-m0;return m0+r/n}
+function variance(a,sample=true){const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-(sample?1:0))}
+function sd(a,sample=true){return Math.sqrt(variance(a,sample))}
+function quantile(a,q){
+  // Minitab convention (Weibull / type-6): position = q*(n+1)
+  const b=[...a].sort((x,y)=>x-y),n=b.length,pos=q*(n+1),i=Math.floor(pos),f=pos-i;
+  if(i<1)return b[0];
+  if(i>=n)return b[n-1];
+  return b[i-1]+f*(b[i]-b[i-1]);
+}
+// erf/erfc to ~1e-15 relative (replaces the 1.5e-7 Abramowitz–Stegun 7.1.26 approximation).
+// |x|<2.5: positive series erf(x)=2/sqrt(pi)·e^{-x²}·Σ 2^n x^{2n+1}/(1·3·…·(2n+1)); |x|>=2.5: continued fraction for erfc (modified Lentz).
+function erfcPos(x){
+  if(x<2.5)return 1-erfSeries(x);
+  const tiny=1e-300;let f=x,C=x,D=0;
+  for(let k=1;k<500;k++){const a=k/2;D=x+a*D;D=Math.abs(D)<tiny?tiny:D;C=x+a/C;C=Math.abs(C)<tiny?tiny:C;D=1/D;const d=C*D;f*=d;if(Math.abs(d-1)<1e-16)break}
+  return Math.exp(-x*x)/Math.sqrt(Math.PI)/f;
+}
+function erfSeries(x){let t=x,sum=x;for(let n=1;n<200;n++){t*=2*x*x/(2*n+1);sum+=t;if(t<1e-17*sum)break}return 2/Math.sqrt(Math.PI)*Math.exp(-x*x)*sum}
+function erf(x){const ax=Math.abs(x),v=ax<2.5?erfSeries(ax):1-erfcPos(ax);return x<0?-v:v}
+function normalCdf(z){return z<0?.5*erfcPos(-z/Math.SQRT2):1-.5*erfcPos(z/Math.SQRT2)}
+function fmt(x,d=4){return Number.isFinite(x)?Number(x).toFixed(d):"—"}
+
+/* ---------- exact t / F p-values (Numerical Recipes incomplete beta) ---------- */
+function gammaln(x){
+  const cof=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);let ser=1.000000000190015;
+  for(let j=0;j<6;j++){y+=1;ser+=cof[j]/y}
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function betacf(x,a,b){
+  const MAXIT=200,EPS=3e-9,FPMIN=1e-30;
+  let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;
+  if(Math.abs(d)<FPMIN)d=FPMIN; d=1/d; let h=d;
+  for(let m=1;m<=MAXIT;m++){
+    const m2=2*m;
+    let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN;
+    c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN;
+    d=1/d; const del=d*c; h*=del;
+    if(Math.abs(del-1)<EPS)break;
+  }
+  return h;
+}
+function betai(a,b,x){
+  if(x<=0)return 0; if(x>=1)return 1;
+  const bt=Math.exp(gammaln(a+b)-gammaln(a)-gammaln(b)+a*Math.log(x)+b*Math.log(1-x));
+  if(x<(a+1)/(a+b+2))return bt*betacf(x,a,b)/a;
+  return 1-bt*betacf(1-x,b,a)/b;
+}
+function tCDF(t,df){const x=df/(df+t*t),ib=betai(df/2,0.5,x);return t>0?1-0.5*ib:0.5*ib}
+function tTestP(t,df){return 2*(1-tCDF(Math.abs(t),df))}
+function fTestP(f,d1,d2){if(f<=0)return 1;const x=d1*f/(d1*f+d2);return 1-betai(d1/2,d2/2,x)}
+
+/* ---------- shared axis / data-label helpers for canvas charts ---------- */
+function niceTicks(lo,hi,count=5){
+  if(!(hi>lo)){hi=lo+1;lo=lo-1}
+  const range=hi-lo,rawStep=range/count,mag=Math.pow(10,Math.floor(Math.log10(rawStep))),norm=rawStep/mag;
+  let step; if(norm<1.5)step=1*mag; else if(norm<3)step=2*mag; else if(norm<7)step=5*mag; else step=10*mag;
+  const start=Math.ceil(lo/step)*step,ticks=[];
+  for(let v=start;v<=hi+1e-9;v+=step)ticks.push(Number(v.toFixed(10)));
+  return {ticks,step};
+}
+function tickDecimals(step){
+  if(step<=0||!Number.isFinite(step))return 2;
+  if(step>=1)return 0;
+  return Math.min(6,Math.ceil(-Math.log10(step)));
+}
+function drawYAxisTicks(x,b,lo,hi,yy,count=5){
+  const {ticks,step}=niceTicks(lo,hi,count),d=tickDecimals(step);
+  x.save();x.font="11px Segoe UI,Arial";x.textAlign="right";x.textBaseline="middle";
+  ticks.forEach(t=>{
+    const py=yy(t);
+    x.strokeStyle="#eef1f5";x.beginPath();x.moveTo(b.L,py);x.lineTo(b.L+b.W,py);x.stroke();
+    x.fillStyle="#64748b";x.fillText(fmt(t,d),b.L-6,py);
+  });
+  x.restore();
+}
+function drawXAxisTicksNumeric(x,b,lo,hi,xx,count=5){
+  const {ticks,step}=niceTicks(lo,hi,count),d=tickDecimals(step);
+  x.save();x.font="11px Segoe UI,Arial";x.textAlign="center";x.textBaseline="top";
+  ticks.forEach(t=>{
+    const px=xx(t);
+    x.fillStyle="#64748b";x.fillText(fmt(t,d),px,b.T+b.H+4);
+  });
+  x.restore();
+}
+function labelStep(n,maxLabels=25){return Math.max(1,Math.ceil(n/maxLabels))}
+function dataDecimals(values){
+  const a=(values||[]).filter(Number.isFinite);
+  if(a.length<2)return 4;
+  const range=Math.max(...a)-Math.min(...a);
+  if(!(range>0))return 4;
+  const d=Math.ceil(-Math.log10(range))+2;
+  return Math.max(0,Math.min(6,d));
+}
+function drawPointLabel(x,px,py,text,dy=-8){
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";
+  x.fillText(text,px,py+dy);x.restore();
+}
+
+function openAnalysis(type){
+  trackSidebarOpen('analysis',type);
+  showTab('analysis');document.getElementById('analysisResult').innerHTML='<div class="small">设置参数后运行分析。</div>';
+  const f=document.getElementById('analysisForm'); const t=document.getElementById('analysisTitle');
+  if(type==='desc'){t.textContent='描述性统计';f.innerHTML=formOne('desc','变量')+runBtn("runDesc()",type)}
+  if(type==='normality'){t.textContent='Anderson–Darling 正态性检验';f.innerHTML=formOne('normality','变量')+runBtn("runNormality()",type)}
+  if(type==='capability'){t.textContent='正态过程能力分析';f.innerHTML=`
+    <div class="grid3">
+    <div><label>测量列</label><select id="capCol">${colOptions()}</select></div>
+    <div><label>LSL（单边公差可留空）</label><input id="lsl" type="number" step="any" placeholder="留空=仅USL单边"></div>
+    <div><label>USL（单边公差可留空）</label><input id="usl" type="number" step="any" placeholder="留空=仅LSL单边"></div>
+    <div><label>目标值（可选）</label><input id="target" type="number" step="any"></div>
+    <div><label>判定标准 Cpk</label><input id="cpkLimit" type="number" step=".01" value="1.33"></div>
+    <div><label>组内标准差估算方式</label><select id="sigmaMethod">
+      <option value="mr" selected>单值 MR(2)（移动极差，Minitab 默认）</option>
+      <option value="overall">整体标准差（不分子组，此时 Cpk = Ppk）</option>
+      <option value="column">按子组列分组</option>
+      <option value="size">指定子组大小</option>
+    </select></div>
+    <div><label>子组列（估算方式=按列分组时使用）</label><select id="subgroup"><option value="">无</option>${colOptions()}</select></div>
+    <div><label>子组大小 n（估算方式=指定大小时使用，2–10）</label><input id="subSize" type="number" min="2" max="10" value="5"></div>
+    <div><label>按 Cavity（或其它列）分组比较 Cpk（可选）</label><select id="cavityCol"><option value="">无</option>${colOptions()}</select></div>
+    </div>
+    <p class="small">组内标准差估算方式会直接影响 Cp/Cpk（Pp/Ppk 始终用整体标准差，不受此设置影响）。选择「按 Cavity 分组比较」后，会在结果下方额外给出每个 Cavity 单独的 Cp/Cpk 对比表和图。</p>
+    <p class="small status-warn">✅ 支持单边公差：LSL、USL 只需填写一个，另一个留空即可。单边时 Cp/Pp 不适用（显示\"—\"），Cpk/Ppk 自动按 Cpu/Ppu（仅USL）或 Cpl/Ppl（仅LSL）计算，标签仍显示为 Cpk/Ppk。</p>`+runBtn("runCapability()",type)+` <button class="good" onclick="runTracked('analysis','${type}','runCapabilitySixpack()')" title="Minitab 六合一：Xbar/I + R/MR + Last 25 + Capability Histogram + Normal Prob Plot + Capability Plot">📊 生成 Capability Sixpack（六合一）</button>`}
+  if(type==='xbarR'){t.textContent='Xbar-R 控制图';f.innerHTML=`
+    <div class="grid2"><div><label>测量列</label><select id="xrCol">${colOptions()}</select></div>
+    <div><label>子组列</label><select id="xrSub">${colOptions()}</select></div></div>
+    <div><label>按 Cavity（或其它列）分层（可选，不合并）</label><select id="xrGroup"><option value="">无（合并为一张图）</option>${colOptions()}</select></div>
+    <p class="small">选择分层列后，将按该列的每个取值单独计算子组均值/极差、控制限并各自出图，不再合并到一张图中。</p>`+runBtn("runXbarR()",type)}
+  if(type==='imr'){t.textContent='I-MR 控制图';f.innerHTML=formOne('imr','测量列')+`
+    <div><label>按 Cavity（或其它列）分层（可选，不合并）</label><select id="imrGroup"><option value="">无（合并为一张图）</option>${colOptions()}</select></div>
+    <p class="small">选择分层列后，将按该列的每个取值单独计算单值/移动极差、控制限并各自出图（组内按原始行序计算移动极差）。</p>`+runBtn("runIMR()",type)}
+  if(type==='ttest'){t.textContent='双样本 t 检验';f.innerHTML=`
+    <div class="grid2"><div><label>样本1</label><select id="t1">${colOptions()}</select></div>
+    <div><label>样本2</label><select id="t2">${colOptions()}</select></div></div>`+runBtn("runTTest()",type)}
+  if(type==='anova'){t.textContent='单因素 ANOVA';f.innerHTML=`
+    <div class="grid2"><div><label>响应列</label><select id="aResp">${colOptions()}</select></div>
+    <div><label>因子列</label><select id="aFactor">${colOptions()}</select></div></div>`+runBtn("runAnova()",type)}
+  if(type==='regression'){t.textContent='线性回归';f.innerHTML=`
+    <div class="grid2"><div><label>Y 响应</label><select id="regY">${colOptions()}</select></div>
+    <div><label>X 预测变量</label><select id="regX">${colOptions()}</select></div></div>`+runBtn("runRegression()",type)}
+  if(type==='maineffects'){t.textContent='主效应分析 Main Effects Analysis';f.innerHTML=`
+    <div class="grid2"><div><label>响应列</label><select id="meResp">${colOptions()}</select></div>
+    <div><label>因子列（可多选，依次添加）</label>${groupSelector('meFactors')}</div></div>`+runBtn("runMainEffects()",type)}
+  if(type==='grr'){t.textContent='Gage R&R（交叉法，ANOVA基础版）';f.innerHTML=`
+    <div class="grid3"><div><label>测量列</label><select id="gVal">${colOptions()}</select></div>
+    <div><label>零件列</label><select id="gPart">${colOptions()}</select></div>
+    <div><label>检验员列</label><select id="gOp">${colOptions()}</select></div>
+    <div><label>公差（可选）</label><input id="gTol" type="number" step="any"></div></div>`+runBtn("runGRR()",type)}
+  if(type==='doe'){t.textContent='DOE 全因子设计生成器';f.innerHTML=`
+    <div class="grid3"><div><label>因子数</label><input id="doeN" type="number" min="2" max="6" value="3"></div>
+    <div><label>重复次数</label><input id="doeRep" type="number" min="1" max="10" value="1"></div>
+    <div><label>随机化</label><select id="doeRand"><option value="yes">是</option><option value="no">否</option></select></div></div>`+runBtn("runDOE()",type)}
+}
+function formOne(id,label){return `<div><label>${label}</label><select id="${id}Col">${colOptions()}</select></div>`}
+function runBtn(fn,type){return `<br><button class="primary" onclick="runTracked('analysis','${type}','${fn}')">运行分析</button>`}
+
+/* ---------- pure computation functions (no DOM) — used by the UI and by verify/ ---------- */
+function descStats(a){
+  // Minitab (Display Descriptive Statistics) / Excel SKEW,KURT / SAS: adjusted G1 and G2
+  const m=mean(a),s=sd(a),n=a.length,z3=a.reduce((z,x)=>z+((x-m)/s)**3,0),z4=a.reduce((z,x)=>z+((x-m)/s)**4,0);
+  const sk=n>=3?n/((n-1)*(n-2))*z3:NaN;
+  const ku=n>=4?n*(n+1)/((n-1)*(n-2)*(n-3))*z4-3*(n-1)**2/((n-2)*(n-3)):NaN;
+  return {N:a.length,Mean:m,StDev:s,Variance:s*s,Minimum:Math.min(...a),Q1:quantile(a,.25),Median:quantile(a,.5),Q3:quantile(a,.75),Maximum:Math.max(...a),Skewness:sk,Kurtosis:ku};
+}
+function runDesc(){
+  const c=document.getElementById('descCol').value,a=nums(c);if(a.length<2)return alert("有效数值不足");
+  const r=descStats(a),m=r.Mean,s=r.StDev;
+  document.getElementById('analysisResult').innerHTML=`<h3>${esc(c)}</h3><div class="kpis">${Object.entries(r).map(([k,v])=>`<div class="kpi"><span>${k}</span><b>${k==='N'?v:fmt(v)}</b></div>`).join("")}</div>${skippedNote(c)}`;
+  log(`Descriptive Statistics: ${c}\nN=${r.N}  Mean=${fmt(m)}  StDev=${fmt(s)}  Min=${fmt(r.Minimum)}  Q1=${fmt(r.Q1)}  Median=${fmt(r.Median)}  Q3=${fmt(r.Q3)}  Max=${fmt(r.Maximum)}\n`);
+  resetChartsContainer();drawHistogram(a,c);
+}
+// Anderson–Darling normality test (mean & sd estimated). Returns raw A², adjusted A²*=A²(1+.75/n+2.25/n²) and Stephens p.
+function adNormalityTest(aRaw){
+  const a=[...aRaw].sort((x,y)=>x-y),m=mean(a),s=sd(a),n=a.length;
+  let A=0;
+  for(let i=0;i<n;i++){
+    // ln F(z_i) + ln(1-F(z_{n+1-i})), both from the accurate CDF (no clamping; matches R nortest::ad.test)
+    A+=(2*(i+1)-1)*(Math.log(normalCdf((a[i]-m)/s))+Math.log(normalCdf(-(a[n-1-i]-m)/s)));
+  }
+  const A2raw=-n-A/n,A2=A2raw*(1+.75/n+2.25/(n*n));
+  let p;
+  if(A2<.2)p=1-Math.exp(-13.436+101.14*A2-223.73*A2*A2);
+  else if(A2<.34)p=1-Math.exp(-8.318+42.796*A2-59.938*A2*A2);
+  else if(A2<.6)p=Math.exp(.9177-4.279*A2-1.38*A2*A2);
+  else if(A2<10)p=Math.exp(1.2937-5.709*A2+.0186*A2*A2);
+  else p=3.7e-24; // Stephens' quadratic is only valid below 10 (it turns upward and reaches p=1 near A²*≈300); same cut as nortest
+  p=Math.max(0,Math.min(1,p));
+  return {n,mean:m,sd:s,A2raw,A2,p};
+}
+function runNormality(){
+  const c=document.getElementById('normalityCol').value,a=nums(c).sort((x,y)=>x-y);if(a.length<5)return alert("至少需要5个数值");
+  const ad=adNormalityTest(a),n=ad.n,A2=ad.A2,A2raw=ad.A2raw,p=ad.p;
+  const cls=p>=.05?'status-ok':'status-bad';
+  document.getElementById('analysisResult').innerHTML=`<h3>Anderson–Darling Normality Test</h3>
+  <div class="kpis"><div class="kpi"><span>N</span><b>${n}</b></div><div class="kpi"><span>AD（同 Minitab，未修正 A²）</span><b>${fmt(A2raw,4)}</b></div><div class="kpi"><span>A²*（小样本修正，用于 P 值）</span><b>${fmt(A2,4)}</b></div>
+  <div class="kpi"><span>P-Value</span><b>${fmt(p,4)}</b></div><div class="kpi"><span>结论</span><b class="${cls}">${p>=.05?'未拒绝正态性':'拒绝正态性'}</b></div></div>
+  <p class="small">P-value 使用常见 Stephens 近似；边界样本可能与商业软件显示存在细微差异。</p>${skippedNote(c)}`;
+  log(`Normality Test: ${c}\nAnderson-Darling AD=${fmt(A2raw)} (A²*=${fmt(A2)})  P=${fmt(p)}  Result=${p>=.05?'Pass normality screening':'Non-normal'}\n`);
+  resetChartsContainer();drawProbability(a,c);
+}
+// d2 unbiasing constants (full precision; d2(2)=2/sqrt(pi))
+const D2_TABLE={2:1.128379167096,3:1.692568750643,4:2.058750746008,5:2.325928947281,6:2.534412721223,7:2.704356751214,8:2.847200612091,9:2.970026324418,10:3.077505461670};
+// d3 = SD of the relative range (normal parent), by numerical integration; cross-checked in verify/ against R and SciPy
+const D3SD_TABLE={2:0.852502466427,3:0.888368004045,4:0.879808202825,5:0.864081941100,6:0.848039686117,7:0.833205335622,8:0.819831489792,9:0.807834274553,10:0.797050673519};
+const D2_MR2=2/Math.sqrt(Math.PI); // 1.128379167
+// Individuals: sigma_within = MRbar/d2, MR over consecutive non-missing values in worksheet row order.
+// If groupCol is given, MRs are computed inside each group only (never across group boundaries) and pooled.
+function withinSigmaByMR(valueCol,rowSubset,groupCol){
+  const vi=columns.indexOf(valueCol),src=rowSubset||rows,gi=groupCol?columns.indexOf(groupCol):-1,seqs={};
+  src.forEach(r=>{const x=cellNum(r[vi]);if(!Number.isFinite(x))return;const k=gi>=0?String(r[gi]??'').trim():'__all__';if(gi>=0&&k==='')return;(seqs[k]??=[]).push(x)});
+  const mr=[];Object.values(seqs).forEach(a=>{for(let i=1;i<a.length;i++)mr.push(Math.abs(a[i]-a[i-1]))});
+  if(!mr.length)return {sigma:NaN,n:2,mrCount:0,groups:Object.keys(seqs).length,warn:'有效数据不足 2 个，无法计算移动极差'};
+  const mrbar=mean(mr),sigma=mrbar/D2_MR2;
+  return {sigma,n:2,mrbar,mrCount:mr.length,groups:Object.keys(seqs).length,warn:sigma>0?'':'所有移动极差为 0（数据全部相同），组内σ=0，无法计算 Cp/Cpk'};
+}
+function withinSigmaBySubgroup(valueCol,subCol,rowSubset){
+  const vi=columns.indexOf(valueCol),si=columns.indexOf(subCol),g={};
+  (rowSubset||rows).forEach(r=>{const x=cellNum(r[vi]),k=r[si];if(Number.isFinite(x)&&k!=="")(g[k]??=[]).push(x)});
+  const sizes=Object.values(g).map(x=>x.length);
+  if(!sizes.length)return {sigma:NaN,n:null};
+  const n=Math.round(mean(sizes)),d2=D2_TABLE[n];
+  const ranges=Object.values(g).map(x=>Math.max(...x)-Math.min(...x));
+  return {sigma:d2?mean(ranges)/d2:NaN,n};
+}
+function withinSigmaByFixedSize(valueCol,size,rowSubset){
+  const vi=columns.indexOf(valueCol),vals=(rowSubset||rows).map(r=>cellNum(r[vi])).filter(Number.isFinite);
+  const d2=D2_TABLE[size];
+  if(!d2||vals.length<size)return {sigma:NaN,n:size,subgroups:0,dropped:vals.length};
+  const k=Math.floor(vals.length/size),ranges=[];
+  for(let i=0;i<k;i++){const chunk=vals.slice(i*size,(i+1)*size);ranges.push(Math.max(...chunk)-Math.min(...chunk))}
+  return {sigma:mean(ranges)/d2,n:size,subgroups:k,dropped:vals.length-k*size};
+}
+function computeWithinSigma(valueCol,method,subCol,size,rowSubset,groupCol){
+  if(method==='overall')return {sigma:NaN,n:null,overall:true};
+  if(method==='column'&&subCol)return withinSigmaBySubgroup(valueCol,subCol,rowSubset);
+  if(method==='size'&&size>=2&&size<=10)return withinSigmaByFixedSize(valueCol,size,rowSubset);
+  // default (method 'mr', or 'column' with no subgroup column chosen): individuals MR(2)
+  const r=withinSigmaByMR(valueCol,rowSubset,groupCol);
+  if(method==='column')r.note='未选择子组列，已改用单值 MR(2)';
+  if(method==='size')r.note='子组大小不在 2–10，已改用单值 MR(2)';
+  return r;
+}
+function parseSpecInput(id){
+  const el=document.getElementById(id);
+  if(!el)return NaN;
+  const raw=String(el.value).trim();
+  if(raw==="")return NaN;
+  const v=Number(raw);
+  return Number.isFinite(v)?v:NaN;
+}
+// Cpm — Minitab definition ("Methods and formulas for Overall capability", Cpm, Toler=6):
+// https://support.minitab.com/en-us/minitab/help-and-how-to/quality-and-process-improvement/capability-analysis/how-to/capability-analysis/normal-capability-analysis/methods-and-formulas/overall-capability/
+//   D = sqrt( Σ(x−T)² / N )
+//   LSL,USL,T=m : (USL−LSL)/(6·D)        LSL,USL,T≠m : min(T−LSL, USL−T)/(3·D)
+//   USL,T only  : (USL−T)/(3·D)          LSL,T only  : (T−LSL)/(3·D)          no target / no limit : missing
+// (NIST/SEMATECH e-Handbook pmc16 uses √(s²+(x̄−T)²) with s on n−1; QuaStat follows Minitab since V5.5.1.)
+function cpmMinitab(a,lsl,usl,T,hasL,hasU){
+  if(!Number.isFinite(T)||!a.length||(!hasL&&!hasU))return NaN;
+  let ss=0;for(const x of a)ss+=(x-T)**2;const D=Math.sqrt(ss/a.length);
+  if(!(D>0))return NaN;
+  if(hasL&&hasU){const mid=(lsl+usl)/2;
+    return Math.abs(T-mid)<=1e-12*Math.max(1,Math.abs(mid))?(usl-lsl)/(6*D):Math.min(T-lsl,usl-T)/(3*D)}
+  return hasU?(usl-T)/(3*D):(T-lsl)/(3*D);
+}
+function capabilityStats(valueCol,lsl,usl,target,method,subCol,size,rowSubset,groupCol){
+  const vi=columns.indexOf(valueCol),a=(rowSubset||rows).map(r=>cellNum(r[vi])).filter(Number.isFinite);
+  const skipped=countSkipped(vi,rowSubset);
+  if(a.length<3)return null;
+  const m=mean(a),overall=sd(a),wi=computeWithinSigma(valueCol,method,subCol,size,rowSubset,groupCol);
+  // 'overall' method: within σ := overall σ by user choice (Cpk = Ppk). Any other method that fails => NaN + visible warning (no silent fallback).
+  let within;
+  if(wi.overall)within=overall;
+  else if(Number.isFinite(wi.sigma)&&wi.sigma>0)within=wi.sigma;
+  else{within=NaN;if(!wi.warn)wi.warn='组内σ无法计算（子组数据不足或极差全为 0）';}
+  const hasL=Number.isFinite(lsl),hasU=Number.isFinite(usl);
+  // one-sided tolerance support: Cpu/Ppu (USL only) or Cpl/Ppl (LSL only); Cp/Pp are not defined for one-sided specs (Minitab convention)
+  const cpu=hasU?(usl-m)/(3*within):NaN, cpl=hasL?(m-lsl)/(3*within):NaN;
+  const ppu=hasU?(usl-m)/(3*overall):NaN, ppl=hasL?(m-lsl)/(3*overall):NaN;
+  let cp=NaN,pp=NaN,cpk=NaN,ppk=NaN;
+  if(hasL&&hasU){
+    cp=(usl-lsl)/(6*within); pp=(usl-lsl)/(6*overall);
+    cpk=Math.min(cpu,cpl); ppk=Math.min(ppu,ppl);
+  }else if(hasU){
+    cpk=cpu; ppk=ppu; // one-sided: label stays "Cpk/Ppk" per user preference, value = Cpu/Ppu
+  }else if(hasL){
+    cpk=cpl; ppk=ppl; // one-sided: label stays "Cpk/Ppk" per user preference, value = Cpl/Ppl
+  }
+  const cpm=cpmMinitab(a,lsl,usl,target,hasL,hasU);
+  return {N:a.length,skipped,mean:m,overall,within,cp,cpk,pp,ppk,cpm,cpu,cpl,ppu,ppl,hasL,hasU,withinInfo:wi,data:a};
+}
+function capVerdict(cpk,limit){return Number.isFinite(cpk)?(cpk>=limit?'PASS':'FAIL'):'—'}
+function capMethodLabel(method,stat,subCol,size,groupCol){
+  const wi=stat.withinInfo||{};
+  if(method==='overall')return '整体标准差（不分子组，此时 Cpk = Ppk）';
+  if(method==='column'&&subCol)return `按子组列分组（${subCol}${wi.n?`，n≈${wi.n}`:''}）`;
+  if(method==='size'&&size>=2&&size<=10)return `指定子组大小（n=${size}，共${wi.subgroups||0}个子组${wi.dropped?`，末尾丢弃${wi.dropped}个不满子组的数据`:''}）`;
+  return `单值 MR(2)（移动极差，σ=MR̄/d2，d2=1.128379${wi.mrbar!==undefined?`，MR̄=${fmt(wi.mrbar,6)}，${wi.mrCount}个MR`:''}${groupCol&&wi.groups>1?`，在每个 ${groupCol} 内分别计算、不跨组`:''}${wi.note?`；${wi.note}`:''}）`;
+}
+function capWarnHtml(stat,label){
+  const w=[];
+  if(stat.withinInfo&&stat.withinInfo.warn)w.push(`⚠️ ${label?esc(label)+'：':''}${esc(stat.withinInfo.warn)}，Cp/Cpk 显示为「—」。`);
+  if(stat.skipped)w.push(`ℹ️ ${label?esc(label)+'：':''}已跳过 ${stat.skipped} 行空白或非数值单元格（按缺失处理，不计为 0）。`);
+  return w.map(t=>`<p class="small status-warn">${t}</p>`).join('');
+}
+function runCapability(){
+  const c=document.getElementById('capCol').value,lsl=parseSpecInput('lsl'),usl=parseSpecInput('usl');
+  const hasL=Number.isFinite(lsl),hasU=Number.isFinite(usl);
+  if(!hasL&&!hasU)return alert("请至少填写 LSL 或 USL 其中一个规格限（单边公差只需填一个，另一个留空即可）");
+  if(hasL&&hasU&&usl<=lsl)return alert("请检查规格限（LSL 必须小于 USL）");
+  const method=document.getElementById('sigmaMethod').value,subCol=document.getElementById('subgroup').value,size=Number(document.getElementById('subSize').value)||5;
+  const target=parseSpecInput('target'),limit=Number(document.getElementById('cpkLimit').value)||1.33;
+  const cavityCol=document.getElementById('cavityCol').value;
+  const stat=capabilityStats(c,lsl,usl,target,method,subCol,size,undefined,cavityCol||undefined);
+  if(!stat)return alert("有效数值不足（至少需要3个）");
+  const cls=stat.cpk>=limit?'status-ok':'status-bad';
+  const sideLabel=hasL&&hasU?'双边 Two-Sided':hasU?'单边(仅USL) One-Sided — USL only':'单边(仅LSL) One-Sided — LSL only';
+  const methodLabel=capMethodLabel(method,stat,subCol,size,cavityCol);
+  let html=`<h3>Capability Analysis — ${esc(c)} <span class="badge">${sideLabel}</span></h3>
+  <div class="kpis"><div class="kpi"><span>Cp</span><b>${fmt(stat.cp,3)}</b></div><div class="kpi"><span>Cpk</span><b class="${cls}">${fmt(stat.cpk,3)}</b></div>
+  <div class="kpi"><span>Pp</span><b>${fmt(stat.pp,3)}</b></div><div class="kpi"><span>Ppk</span><b>${fmt(stat.ppk,3)}</b></div>
+  <div class="kpi"><span>Mean</span><b>${fmt(stat.mean,4)}</b></div><div class="kpi"><span>Within σ</span><b>${fmt(stat.within,4)}</b></div>
+  <div class="kpi"><span>Overall σ</span><b>${fmt(stat.overall,4)}</b></div><div class="kpi"><span>Cpm</span><b>${fmt(stat.cpm,3)}</b></div></div>
+  <p>${hasL?`<span class="badge">LSL ${lsl}</span>`:''}${hasU?`<span class="badge">USL ${usl}</span>`:''}<span class="badge">判定 ${capVerdict(stat.cpk,limit)}</span></p>
+  <p class="small">组内σ估算方式：${esc(methodLabel)}</p>${capWarnHtml(stat)}
+  ${(!hasL||!hasU)?`<p class="small status-warn">⚠️ 当前为单边公差：Cp/Pp 不适用（显示为\"—\"，Minitab 惯例），Cpk/Ppk 已按 ${hasU?'Cpu/Ppu（仅上限）':'Cpl/Ppl（仅下限）'} 计算，标签沿用 Cpk/Ppk。</p>`:''}`;
+  log(`Process Capability: ${c}\nLSL=${hasL?lsl:'N/A'} USL=${hasU?usl:'N/A'} (${sideLabel}) N=${stat.N}${stat.skipped?` (skipped ${stat.skipped} blank/non-numeric)`:''} Mean=${fmt(stat.mean)} Within StDev=${fmt(stat.within)} (${methodLabel}) Overall StDev=${fmt(stat.overall)}\nCp=${fmt(stat.cp,3)} Cpk=${fmt(stat.cpk,3)} Pp=${fmt(stat.pp,3)} Ppk=${fmt(stat.ppk,3)} Cpm=${fmt(stat.cpm,3)}${stat.withinInfo.warn?`\nWARNING: ${stat.withinInfo.warn}`:''}\n`);
+
+  if(cavityCol){
+    const ci=columns.indexOf(cavityCol),levels={};
+    rows.forEach(r=>{const k=r[ci];if(k!=="")(levels[k]??=[]).push(r)});
+    const compRows=Object.keys(levels).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).map(lvl=>{
+      const st=capabilityStats(c,lsl,usl,target,method,subCol,size,levels[lvl]);
+      return st?{level:lvl,...st}:null;
+    }).filter(Boolean);
+    if(compRows.length){
+      html+=`<h3 style="margin-top:16px">按 ${esc(cavityCol)} 分组比较</h3>
+      <table><tr><th>${esc(cavityCol)}</th><th>N</th><th>Mean</th><th>Within σ</th><th>Cp</th><th>Cpk</th><th>Pp</th><th>Ppk</th><th>判定</th></tr>
+      ${compRows.map(r=>`<tr><td>${esc(r.level)}</td><td>${r.N}</td><td>${fmt(r.mean,4)}</td><td>${fmt(r.within,4)}</td><td>${fmt(r.cp,3)}</td><td class="${r.cpk>=limit?'status-ok':'status-bad'}">${fmt(r.cpk,3)}</td><td>${fmt(r.pp,3)}</td><td>${fmt(r.ppk,3)}</td><td class="${r.cpk>=limit?'status-ok':'status-bad'}">${capVerdict(r.cpk,limit)}</td></tr>`).join('')}
+      </table>
+      <p class="small">每个 ${esc(cavityCol)} 使用与上方相同的组内σ估算方式，仅在各自子集内独立计算。</p>${compRows.map(r=>capWarnHtml(r,`${cavityCol}=${r.level}`)).join('')}`;
+      log(`Capability by ${cavityCol} (method: ${methodLabel}):\n`+compRows.map(r=>`${r.level}: N=${r.N} Mean=${fmt(r.mean)} Within=${fmt(r.within)} Cpk=${fmt(r.cpk,3)} Ppk=${fmt(r.ppk,3)} ${capVerdict(r.cpk,limit)}`).join('\n')+'\n');
+    }
+    document.getElementById('analysisResult').innerHTML=html;
+    resetChartsContainer();
+    if(compRows.length)drawCapabilityCompare(compRows,limit,`Cpk by ${cavityCol} — ${c}`);
+    else drawCapability(stat.data,lsl,usl,stat.mean,stat.overall,c);
+    return;
+  }
+  document.getElementById('analysisResult').innerHTML=html;
+  resetChartsContainer();drawCapability(stat.data,lsl,usl,stat.mean,stat.overall,c);
+}
+function drawCapabilityCompare(compRows,limit,title){
+  const [c,x]=ctxClear(title),sz=canvasCssSize(c),L=60,T=45,W=sz.w-95,H=sz.h-90,b={L,T,W,H};
+  const vals=compRows.map(r=>r.cpk).filter(Number.isFinite),lo=Math.min(0,...vals),hi=Math.max(...vals,limit)*1.15||1;
+  const yy=v=>T+H-(v-lo)/(hi-lo||1)*H;
+  drawYAxisTicks(x,b,lo,hi,yy,5);
+  x.strokeStyle="#475569";x.strokeRect(L,T,W,H);
+  const n=compRows.length;
+  compRows.forEach((r,i)=>{
+    if(!Number.isFinite(r.cpk))return;
+    const px0=L+i*W/n,bw=Math.max(6,W/n-8),top=yy(Math.max(0,r.cpk)),bot=yy(Math.min(0,r.cpk));
+    x.fillStyle=r.cpk>=limit?'#2f7f5f':'#b42318';
+    x.fillRect(px0+4,Math.min(top,bot),bw,Math.max(1,Math.abs(bot-top)));
+    x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";
+    x.fillText(fmt(r.cpk,3),px0+4+bw/2,top-4);x.restore();
+    x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#64748b";
+    x.fillText(String(r.level),px0+4+bw/2,T+H+14);x.restore();
+  });
+  x.save();x.strokeStyle="#b66a00";x.setLineDash([4,3]);x.beginPath();x.moveTo(L,yy(limit));x.lineTo(L+W,yy(limit));x.stroke();x.setLineDash([]);
+  x.fillStyle="#b66a00";x.font="11px Segoe UI,Arial";x.textAlign="left";x.fillText(`${LANG==='en'?'Limit':'判定线'} Cpk=${fmt(limit,2)}`,L+4,yy(limit)-6);x.restore();
+}
+function groupData(vcol,scol,rowSubset){
+  const vi=columns.indexOf(vcol),si=columns.indexOf(scol),g={};
+  (rowSubset||rows).forEach(r=>{const x=cellNum(r[vi]),k=r[si];if(Number.isFinite(x)&&k!=="")(g[k]??=[]).push(x)});
+  return g;
+}
+// exact (unrounded) chart factors derived from d2/d3: A2=3/(d2·√n), D3=max(0,1−3d3/d2), D4=1+3d3/d2 (was 3-decimal table values)
+const XBAR_A2={},XBAR_D3={},XBAR_D4={};
+for(let n=2;n<=10;n++){XBAR_A2[n]=3/(D2_TABLE[n]*Math.sqrt(n));XBAR_D3[n]=Math.max(0,1-3*D3SD_TABLE[n]/D2_TABLE[n]);XBAR_D4[n]=1+3*D3SD_TABLE[n]/D2_TABLE[n]}
+function levelsByColumn(col){
+  const ci=columns.indexOf(col),levels={};
+  rows.forEach(r=>{const k=r[ci];if(k!=="")(levels[k]??=[]).push(r)});
+  return Object.keys(levels).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).map(lvl=>({level:lvl,rowSubset:levels[lvl]}));
+}
+function computeXbarRStats(v,s,rowSubset){
+  const g=groupData(v,s,rowSubset),keys=Object.keys(g);
+  if(keys.length<2)return null;
+  const n=Math.round(mean(Object.values(g).map(x=>x.length)));
+  const A2=XBAR_A2[n],D3=XBAR_D3[n],D4=XBAR_D4[n];
+  if(!A2)return null;
+  const means=keys.map(k=>mean(g[k])),ranges=keys.map(k=>Math.max(...g[k])-Math.min(...g[k]));
+  const xb=mean(means),rb=mean(ranges),ucl=xb+A2*rb,lcl=xb-A2*rb,rucl=D4*rb,rlcl=D3*rb;
+  const outs=means.map((x,i)=>x>ucl||x<lcl?i+1:null).filter(Boolean);
+  return {n,subgroups:keys.length,means,ranges,xb,rb,ucl,lcl,rucl,rlcl,outs};
+}
+function computeIMRStats(a){
+  if(a.length<3)return null;
+  const mr=a.slice(1).map((x,i)=>Math.abs(x-a[i])),mrbar=mean(mr),m=mean(a),sig=mrbar/D2_MR2,ucl=m+3*sig,lcl=m-3*sig,mrucl=XBAR_D4[2]*mrbar,mrlcl=0;
+  const outs=a.map((x,i)=>x>ucl||x<lcl?i+1:null).filter(Boolean);
+  return {N:a.length,mr,mrbar,m,sig,ucl,lcl,mrucl,mrlcl,outs};
+}
+function runXbarR(){
+  const v=document.getElementById('xrCol').value,s=document.getElementById('xrSub').value,grp=document.getElementById('xrGroup').value;
+  if(!grp){
+    const st=computeXbarRStats(v,s);
+    if(!st)return alert(!Object.keys(groupData(v,s)).length?"至少需要两个子组":"当前版本支持子组大小2–10");
+    resetChartsContainer();
+    document.getElementById('analysisResult').innerHTML=`<h3>Xbar-R Summary</h3><div class="kpis">
+    <div class="kpi"><span>X̄̄</span><b>${fmt(st.xb)}</b></div><div class="kpi"><span>R̄</span><b>${fmt(st.rb)}</b></div>
+    <div class="kpi"><span>Xbar UCL/LCL</span><b>${fmt(st.ucl)} / ${fmt(st.lcl)}</b></div><div class="kpi"><span>R UCL/LCL</span><b>${fmt(st.rucl)} / ${fmt(st.rlcl)}</b></div></div>
+    <p class="${st.outs.length?'status-bad':'status-ok'}">异常子组：${st.outs.length?st.outs.join(", "):"无 Test 1 异常"}</p>`;
+    log(`Xbar-R Chart: ${v} by ${s}\nSubgroup size=${st.n} Xbarbar=${fmt(st.xb)} Rbar=${fmt(st.rb)} Xbar UCL=${fmt(st.ucl)} LCL=${fmt(st.lcl)} R UCL=${fmt(st.rucl)} LCL=${fmt(st.rlcl)}\n`);
+    drawDualControl(st.means,[st.lcl,st.xb,st.ucl],'Xbar Chart',st.ranges,[st.rlcl,st.rb,st.rucl],'R Chart','Xbar-R Chart — '+v);
+    return;
+  }
+  const levels=levelsByColumn(grp);
+  const results=levels.map(({level,rowSubset})=>({level,st:computeXbarRStats(v,s,rowSubset)})).filter(r=>r.st);
+  if(!results.length)return alert("每个 "+grp+" 分组内的子组数量都不足，无法出图（至少需要两个子组，且子组大小需在2–10之间）");
+  let html=`<h3>Xbar-R Summary — 按 ${esc(grp)} 分层</h3>
+  <table><tr><th>${esc(grp)}</th><th>子组数</th><th>子组大小n</th><th>X̄̄</th><th>R̄</th><th>Xbar UCL/LCL</th><th>R UCL/LCL</th><th>异常子组</th></tr>
+  ${results.map(r=>`<tr><td>${esc(r.level)}</td><td>${r.st.subgroups}</td><td>${r.st.n}</td><td>${fmt(r.st.xb)}</td><td>${fmt(r.st.rb)}</td><td>${fmt(r.st.ucl)} / ${fmt(r.st.lcl)}</td><td>${fmt(r.st.rucl)} / ${fmt(r.st.rlcl)}</td><td class="${r.st.outs.length?'status-bad':'status-ok'}">${r.st.outs.length?r.st.outs.join(", "):"无"}</td></tr>`).join('')}
+  </table>
+  <p class="small">每个 ${esc(grp)} 独立计算子组均值/极差与控制限，不与其它 ${esc(grp)} 合并（不使用整体合并的控制限）。图表窗口中可切换「堆叠显示」查看全部，或「单个查看」逐一切换。</p>`;
+  if(levels.length>results.length)html+=`<p class="small status-warn">已跳过 ${levels.length-results.length} 个分组（子组数不足2个，或子组大小不在支持的2–10范围内）。</p>`;
+  document.getElementById('analysisResult').innerHTML=html;
+  log(`Xbar-R Chart by ${grp}: ${v} by ${s}\n`+results.map(r=>`${grp}=${r.level}: n=${r.st.n} subgroups=${r.st.subgroups} Xbarbar=${fmt(r.st.xb)} Rbar=${fmt(r.st.rb)} Xbar UCL=${fmt(r.st.ucl)} LCL=${fmt(r.st.lcl)} R UCL=${fmt(r.st.rucl)} LCL=${fmt(r.st.rlcl)} 异常子组=${r.st.outs.length?r.st.outs.join(','):'无'}`).join('\n')+'\n');
+  buildCavityCharts(results.map(r=>({level:r.level,topSeries:r.st.means,topLimits:[r.st.lcl,r.st.xb,r.st.ucl],topTitle:'Xbar Chart',bottomSeries:r.st.ranges,bottomLimits:[r.st.rlcl,r.st.rb,r.st.rucl],bottomTitle:'R Chart',mainTitle:`Xbar-R Chart — ${v} | ${grp}=${r.level}`})));
+}
+function runIMR(){
+  const c=document.getElementById('imrCol').value,grp=document.getElementById('imrGroup').value;
+  if(!grp){
+    const a=nums(c),st=computeIMRStats(a);
+    if(!st)return alert("至少需要3个数值");
+    resetChartsContainer();
+    document.getElementById('analysisResult').innerHTML=`<h3>I-MR Summary</h3><div class="kpis">
+    <div class="kpi"><span>Mean</span><b>${fmt(st.m)}</b></div><div class="kpi"><span>MR Bar</span><b>${fmt(st.mrbar)}</b></div>
+    <div class="kpi"><span>I UCL</span><b>${fmt(st.ucl)}</b></div><div class="kpi"><span>I LCL</span><b>${fmt(st.lcl)}</b></div>
+    <div class="kpi"><span>MR UCL</span><b>${fmt(st.mrucl)}</b></div><div class="kpi"><span>MR LCL</span><b>${fmt(st.mrlcl)}</b></div></div>`;
+    log(`I-MR Chart: ${c}\nMean=${fmt(st.m)} MRbar=${fmt(st.mrbar)} Sigma=${fmt(st.sig)} I UCL=${fmt(st.ucl)} LCL=${fmt(st.lcl)} MR UCL=${fmt(st.mrucl)} LCL=${fmt(st.mrlcl)}\n`);
+    drawDualControl(a,[st.lcl,st.m,st.ucl],'Individuals Chart',st.mr,[st.mrlcl,st.mrbar,st.mrucl],'Moving Range Chart','I-MR Chart — '+c);
+    return;
+  }
+  const levels=levelsByColumn(grp),vi=columns.indexOf(c);
+  const results=levels.map(({level,rowSubset})=>{
+    const a=rowSubset.map(r=>cellNum(r[vi])).filter(Number.isFinite);
+    return {level,a,st:computeIMRStats(a)};
+  }).filter(r=>r.st);
+  if(!results.length)return alert("每个 "+grp+" 分组内的数值都不足3个，无法出图");
+  let html=`<h3>I-MR Summary — 按 ${esc(grp)} 分层</h3>
+  <table><tr><th>${esc(grp)}</th><th>N</th><th>Mean</th><th>MR Bar</th><th>I UCL/LCL</th><th>MR UCL/LCL</th><th>异常点</th></tr>
+  ${results.map(r=>`<tr><td>${esc(r.level)}</td><td>${r.st.N}</td><td>${fmt(r.st.m)}</td><td>${fmt(r.st.mrbar)}</td><td>${fmt(r.st.ucl)} / ${fmt(r.st.lcl)}</td><td>${fmt(r.st.mrucl)} / ${fmt(r.st.mrlcl)}</td><td class="${r.st.outs.length?'status-bad':'status-ok'}">${r.st.outs.length?r.st.outs.join(", "):"无"}</td></tr>`).join('')}
+  </table>
+  <p class="small">每个 ${esc(grp)} 使用其自身行序独立计算移动极差与控制限，不跨 ${esc(grp)} 混算。图表窗口中可切换「堆叠显示」查看全部，或「单个查看」逐一切换。</p>`;
+  if(levels.length>results.length)html+=`<p class="small status-warn">已跳过 ${levels.length-results.length} 个分组（数值不足3个）。</p>`;
+  document.getElementById('analysisResult').innerHTML=html;
+  log(`I-MR Chart by ${grp}: ${c}\n`+results.map(r=>`${grp}=${r.level}: N=${r.st.N} Mean=${fmt(r.st.m)} MRbar=${fmt(r.st.mrbar)} I UCL=${fmt(r.st.ucl)} LCL=${fmt(r.st.lcl)} MR UCL=${fmt(r.st.mrucl)} 异常点=${r.st.outs.length?r.st.outs.join(','):'无'}`).join('\n')+'\n');
+  buildCavityCharts(results.map(r=>({level:r.level,topSeries:r.a,topLimits:[r.st.lcl,r.st.m,r.st.ucl],topTitle:'Individuals Chart',bottomSeries:r.st.mr,bottomLimits:[r.st.mrlcl,r.st.mrbar,r.st.mrucl],bottomTitle:'Moving Range Chart',mainTitle:`I-MR Chart — ${c} | ${grp}=${r.level}`})));
+}
+function welchTTest(a,b){
+  const m1=mean(a),m2=mean(b),v1=variance(a),v2=variance(b),se=Math.sqrt(v1/a.length+v2/b.length),t=(m1-m2)/se;
+  const df=(v1/a.length+v2/b.length)**2/((v1/a.length)**2/(a.length-1)+(v2/b.length)**2/(b.length-1));
+  const p=tTestP(t,df); // exact Welch-Satterthwaite t distribution (incomplete beta)
+  return {m1,m2,v1,v2,se,t,df,p};
+}
+function runTTest(){
+  const c1=document.getElementById('t1').value,c2=document.getElementById('t2').value,a=nums(c1),b=nums(c2);if(a.length<2||b.length<2)return alert("样本不足");
+  const {m1,m2,t,df,p}=welchTTest(a,b);
+  const cls=p<.05?'status-bad':'status-ok';
+  document.getElementById('analysisResult').innerHTML=`<h3>Welch Two-Sample t Test</h3><div class="kpis">
+  <div class="kpi"><span>Mean 1</span><b>${fmt(m1)}</b></div><div class="kpi"><span>Mean 2</span><b>${fmt(m2)}</b></div>
+  <div class="kpi"><span>T</span><b>${fmt(t)}</b></div><div class="kpi"><span>DF</span><b>${fmt(df,2)}</b></div>
+  <div class="kpi"><span>P-Value</span><b class="${cls}">${fmt(p,4)}</b></div></div><p class="small">P-value 基于 Welch–Satterthwaite 自由度的精确 t 分布（不完全 Beta 函数）。</p>`;
+  log(`Two-Sample t Test\n${c1}: N=${a.length} Mean=${fmt(m1)}; ${c2}: N=${b.length} Mean=${fmt(m2)}\nT=${fmt(t)} DF=${fmt(df,2)} P≈${fmt(p)}\n`);
+}
+function oneWayAnova(groupsIn){
+  // sums of squares are shift-invariant: subtract one observation first so that x−c is exact for data with many
+  // constant leading digits (NIST StRD SmLs07-09), then work with the small deviations.
+  const c=groupsIn[0][0],groups=groupsIn.map(g=>g.map(v=>v-c));
+  const N=groups.reduce((s,x)=>s+x.length,0),k=groups.length;
+  const gm=mean(groups.flat());
+  const ssb=groups.reduce((s,x)=>s+x.length*(mean(x)-gm)**2,0),ssw=groups.reduce((s,x)=>s+x.reduce((z,v)=>z+(v-mean(x))**2,0),0);
+  const dfb=k-1,dfw=N-k,msb=ssb/dfb,msw=ssw/dfw,F=msb/msw,p=fTestP(F,dfb,dfw);
+  return {N,k,grandMean:gm+c,ssb,ssw,sst:ssb+ssw,dfb,dfw,msb,msw,F,p};
+}
+function runAnova(){
+  const y=document.getElementById('aResp').value,f=document.getElementById('aFactor').value,yi=columns.indexOf(y),fi=columns.indexOf(f),g={};
+  rows.forEach(r=>{const x=cellNum(r[yi]),k=r[fi];if(Number.isFinite(x)&&k!=="")(g[k]??=[]).push(x)});
+  const groups=Object.values(g),N=groups.reduce((s,x)=>s+x.length,0),k=groups.length;if(k<2||N<=k)return alert("分组数据不足");
+  const {ssb,ssw,dfb,dfw,msb,msw,F,p}=oneWayAnova(groups),cls=p<.05?'status-bad':'status-ok';
+  document.getElementById('analysisResult').innerHTML=`<h3>One-Way ANOVA</h3>
+  <table><tr><th>Source</th><th>DF</th><th>SS</th><th>MS</th><th>F</th><th>P</th></tr>
+  <tr><td>Factor</td><td>${dfb}</td><td>${fmt(ssb)}</td><td>${fmt(msb)}</td><td>${fmt(F)}</td><td class="${cls}">${fmt(p,4)}</td></tr>
+  <tr><td>Error</td><td>${dfw}</td><td>${fmt(ssw)}</td><td>${fmt(msw)}</td><td></td><td></td></tr>
+  <tr><td>Total</td><td>${N-1}</td><td>${fmt(ssb+ssw)}</td><td></td><td></td><td></td></tr></table>
+  <p class="small">P 值基于精确 F 分布（不完全 Beta 函数），非近似值。α=0.05 判定：${p<.05?'因子显著影响响应':'未见显著影响'}</p>`;
+  log(`One-Way ANOVA: ${y} versus ${f}\nDF Factor=${dfb} Error=${dfw} F=${fmt(F)} P=${fmt(p,4)}\n`);
+}
+function simpleRegression(xs,ys){
+  const pairs=xs.map((x,i)=>[x,ys[i]]),xm=mean(xs),ym=mean(ys);
+  const b1=pairs.reduce((s,p)=>s+(p[0]-xm)*(p[1]-ym),0)/pairs.reduce((s,p)=>s+(p[0]-xm)**2,0),b0=ym-b1*xm;
+  const pred=xs.map(x=>b0+b1*x),sse=ys.reduce((s,y,i)=>s+(y-pred[i])**2,0),sst=ys.reduce((s,y)=>s+(y-ym)**2,0),r2=1-sse/sst;
+  return {n:xs.length,b0,b1,sse,sst,r2,s:Math.sqrt(sse/(xs.length-2))};
+}
+function runRegression(){
+  const yc=document.getElementById('regY').value,xc=document.getElementById('regX').value,yi=columns.indexOf(yc),xi=columns.indexOf(xc),pairs=[];
+  rows.forEach(r=>{const x=cellNum(r[xi]),y=cellNum(r[yi]);if(Number.isFinite(x)&&Number.isFinite(y))pairs.push([x,y])});
+  if(pairs.length<3)return alert("有效配对不足");
+  const xs=pairs.map(p=>p[0]),ys=pairs.map(p=>p[1]);
+  const {b0,b1,sse,r2}=simpleRegression(xs,ys);
+  document.getElementById('analysisResult').innerHTML=`<h3>Regression Analysis</h3><div class="kpis">
+  <div class="kpi"><span>Intercept</span><b>${fmt(b0)}</b></div><div class="kpi"><span>Slope</span><b>${fmt(b1)}</b></div>
+  <div class="kpi"><span>R²</span><b>${fmt(r2*100,2)}%</b></div><div class="kpi"><span>S</span><b>${fmt(Math.sqrt(sse/(pairs.length-2)))}</b></div></div>
+  <p><b>${esc(yc)}</b> = ${fmt(b0)} + ${fmt(b1)} × <b>${esc(xc)}</b></p>`;
+  log(`Regression: ${yc} versus ${xc}\n${yc} = ${fmt(b0)} + ${fmt(b1)} ${xc}\nR-sq=${fmt(r2*100,2)}% S=${fmt(Math.sqrt(sse/(pairs.length-2)))}\n`);
+  resetChartsContainer();drawScatter(xs,ys,b0,b1,`${yc} vs ${xc}`);
+}
+function runMainEffects(){
+  const resp=document.getElementById('meResp').value,factors=graphGroupState.meFactors||[];
+  if(!factors.length)return alert('请至少添加一个因子列');
+  if(nums(resp).length<2)return alert('响应列有效数值不足');
+  const {grandMean,results}=computeMainEffects(resp,factors);
+  if(!results.length)return alert('所选因子列均无有效多水平数据');
+  const tableRows=results.map(r=>`<tr><td>${esc(r.factor)}</td><td>${r.levels.length}</td><td>${fmt(r.effect,4)}</td><td style="white-space:normal;text-align:left">${r.levels.map(l=>`${esc(l.level)}: ${fmt(l.mean,3)} (n=${l.n})`).join('; ')}</td></tr>`).join('');
+  return renderMainEffects(resp,results,grandMean,tableRows);
+}
+function computeMainEffects(resp,factors){
+  const ri=columns.indexOf(resp),respVals=nums(resp);
+  const grandMean=mean(respVals);
+  const results=factors.map(f=>{
+    const fi=columns.indexOf(f),g={};
+    rows.forEach(r=>{const y=cellNum(r[ri]),lvl=r[fi];if(Number.isFinite(y)&&lvl!=="")(g[lvl]??=[]).push(y)});
+    let levels=Object.keys(g).map(lvl=>({level:lvl,mean:mean(g[lvl]),n:g[lvl].length}));
+    const allNumeric=levels.every(l=>Number.isFinite(Number(l.level)));
+    levels.sort((a,b)=>allNumeric?Number(a.level)-Number(b.level):String(a.level).localeCompare(String(b.level)));
+    const means=levels.map(l=>l.mean),effect=means.length?Math.max(...means)-Math.min(...means):0;
+    return {factor:f,levels,effect};
+  }).filter(r=>r.levels.length>=2);
+  results.sort((a,b)=>b.effect-a.effect);
+  return {grandMean,results};
+}
+function renderMainEffects(resp,results,grandMean,tableRows){
+  document.getElementById('analysisResult').innerHTML=`<h3>Main Effects Analysis — ${esc(resp)}</h3>
+  <p class="small">按 |Effect|（各水平均值的最大值−最小值）降序排列；总体均值 Grand Mean = ${fmt(grandMean,4)}</p>
+  <table><tr><th>因子</th><th>水平数</th><th>Effect (Max−Min)</th><th style="text-align:left">各水平均值</th></tr>${tableRows}</table>
+  <p class="small">Effect 越大，该因子对响应的影响越显著；结合工程判断与 ANOVA/DOE 结果共同判读。</p>`;
+  log(`Main Effects Analysis: ${resp} by ${results.map(r=>r.factor).join(', ')}\nGrand Mean=${fmt(grandMean,4)}\n`+
+    results.map(r=>`${r.factor}: Effect=${fmt(r.effect,4)} | `+r.levels.map(l=>`${l.level}=${fmt(l.mean,4)}(n${l.n})`).join(' ')).join('\n')+'\n');
+  drawMainEffectsPlot(resp,results,grandMean);
+}
+function drawMainEffectsPlot(resp,results,grandMean){
+  const [c,x]=ctxClear(`Main Effects Plot for ${resp}`),sz=canvasCssSize(c);
+  const k=results.length,L=60,T=45,R=20,B=55,gap=24;
+  const totalW=sz.w-L-R-gap*Math.max(0,k-1),panelW=totalW/k,H=sz.h-T-B;
+  const allMeans=results.flatMap(r=>r.levels.map(l=>l.mean));
+  const lo=Math.min(...allMeans,grandMean),hi=Math.max(...allMeans,grandMean),pad=(hi-lo||1)*0.15;
+  const ylo=lo-pad,yhi=hi+pad,yy=v=>T+H-(v-ylo)/(yhi-ylo||1)*H,dec=dataDecimals([...allMeans,grandMean]);
+  drawYAxisTicks(x,{L,T,W:panelW,H},ylo,yhi,yy,5);
+  results.forEach((r,pi)=>{
+    const px0=L+pi*(panelW+gap),n=r.levels.length;
+    x.strokeStyle="#475569";x.strokeRect(px0,T,panelW,H);
+    x.save();x.strokeStyle="#94a3b8";x.setLineDash([4,3]);x.beginPath();x.moveTo(px0,yy(grandMean));x.lineTo(px0+panelW,yy(grandMean));x.stroke();x.restore();
+    const xx=i=>px0+(n<=1?panelW/2:i*panelW/(n-1));
+    x.strokeStyle="#1f5f99";x.lineWidth=1.5;x.beginPath();
+    r.levels.forEach((l,i)=>{const px=xx(i),py=yy(l.mean);i?x.lineTo(px,py):x.moveTo(px,py)});
+    x.stroke();x.lineWidth=1;
+    r.levels.forEach((l,i)=>{
+      const px=xx(i),py=yy(l.mean);
+      x.fillStyle="#1f5f99";x.beginPath();x.arc(px,py,4,0,Math.PI*2);x.fill();
+      x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";x.fillText(fmt(l.mean,dec),px,py-8);x.restore();
+      x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#64748b";x.fillText(String(l.level),px,T+H+14);x.restore();
+    });
+    x.save();x.font="600 12px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#111827";x.fillText(r.factor,px0+panelW/2,T+H+32);x.restore();
+  });
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="left";x.fillStyle="#94a3b8";x.fillText(`Grand Mean = ${fmt(grandMean,dec)} (dashed reference)`,L,T-6);x.restore();
+}
+function runGRR(){
+  const vc=document.getElementById('gVal').value,pc=document.getElementById('gPart').value,oc=document.getElementById('gOp').value;
+  const vi=columns.indexOf(vc),pi=columns.indexOf(pc),oi=columns.indexOf(oc),data=[];
+  rows.forEach(r=>{const y=cellNum(r[vi]);if(Number.isFinite(y)&&r[pi]!==""&&r[oi]!=="")data.push({y,p:String(r[pi]),o:String(r[oi])})});
+  if(data.length<6)return alert("Gage R&R 数据不足");
+  const res=computeCrossedGageANOVA(data,0.25);
+  if(!res)return alert("Gage R&R 需要至少 2 个零件和 2 个检验员");
+  if(res.error)return alert("Gage R&R 计算失败："+res.error);
+  const tol=Number(document.getElementById('gTol').value);
+  const pctTol=grrPctTol(res.sd,tol);
+  const {sd,varComp,pctCont,pctSV,ndc,useInteraction,alpha}=res;
+  const fmtSci=(x,d)=>Number.isFinite(x)?x.toExponential(d||4):"—";
+  const modeLabel=useInteraction
+    ?`含交互项模型 (with interaction) — Part*Operator P=${fmt(res.anovaFull['Part*Operator'].P,3)} ≤ α=${alpha}，保留交互项`
+    :`不含交互项模型 (reduced) — Part*Operator P=${fmt(res.anovaFull['Part*Operator'].P,3)} > α=${alpha}，已合并到 Repeatability`;
+  const anovaKeys=useInteraction?['Part','Operator','Part*Operator','Repeatability','Total']:['Part','Operator','Repeatability','Total'];
+  const anovaRows=anovaKeys.map(k=>{
+    const r=res.anovaUsed[k];if(!r)return '';
+    return `<tr><td style="text-align:left">${esc(k)}</td><td>${r.DF}</td><td>${fmtSci(r.SS,4)}</td><td>${r.MS!==undefined?fmtSci(r.MS,4):'—'}</td><td>${r.F!==undefined&&Number.isFinite(r.F)?fmt(r.F,3):'—'}</td><td>${r.P!==undefined&&Number.isFinite(r.P)?fmt(r.P,3):'—'}</td></tr>`;
+  }).join('');
+  const vcRows=[
+    ['Total Gage R&R',varComp.totalGRR,pctCont.totalGRR],
+    ['&nbsp;&nbsp;Repeatability',varComp.repeat,pctCont.repeat],
+    ['&nbsp;&nbsp;Reproducibility',varComp.reprod,pctCont.reprod],
+    ['&nbsp;&nbsp;&nbsp;&nbsp;Operator',varComp.operator,pctCont.operator]
+  ];
+  if(useInteraction)vcRows.push(['&nbsp;&nbsp;&nbsp;&nbsp;Operator*Part',varComp.interaction,pctCont.interaction]);
+  vcRows.push(['Part-to-Part',varComp.part,pctCont.part]);
+  vcRows.push(['Total Variation',varComp.total,100]);
+  const vcHtml=vcRows.map(([n,v,pcv])=>`<tr><td style="text-align:left">${n}</td><td>${fmtSci(v,4)}</td><td>${fmt(pcv,2)}</td></tr>`).join('');
+  const showTol=pctTol!==null;
+  const sdSources=[
+    ['Total Gage R&R','totalGRR'],['&nbsp;&nbsp;Repeatability','repeat'],
+    ['&nbsp;&nbsp;Reproducibility','reprod'],['&nbsp;&nbsp;&nbsp;&nbsp;Operator','operator']
+  ];
+  if(useInteraction)sdSources.push(['&nbsp;&nbsp;&nbsp;&nbsp;Operator*Part','interaction']);
+  sdSources.push(['Part-to-Part','part']);
+  sdSources.push(['Total Variation','total']);
+  const sdHtml=sdSources.map(([label,key])=>{
+    const v=sd[key],svVal=6*v,pctSvVal=pctSV[key],pctTolVal=showTol?pctTol[key]:null;
+    return `<tr><td style="text-align:left">${label}</td><td>${fmtSci(v,4)}</td><td>${fmtSci(svVal,4)}</td><td>${fmt(pctSvVal,2)}</td>${showTol?`<td>${fmt(pctTolVal,2)}</td>`:''}</tr>`;
+  }).join('');
+  const grrPctSVCls=pctSV.totalGRR<10?'status-ok':(pctSV.totalGRR<=30?'status-warn':'status-bad');
+  const grrJudge=pctSV.totalGRR<10?'优秀 Acceptable (AIAG <10%)':(pctSV.totalGRR<=30?'可接受 Marginal (AIAG 10–30%)':'不可接受 Unacceptable (AIAG >30%)');
+  document.getElementById('analysisResult').innerHTML=`
+  <h3>Gage R&amp;R (ANOVA, Crossed) — ${esc(vc)} by ${esc(pc)}, ${esc(oc)}</h3>
+  <p class="small">${modeLabel} · N=${data.length}, parts p=${res.p}, operators k=${res.k}, replicates n=${res.n}</p>
+  <div class="kpis">
+    <div class="kpi"><span>Total Gage R&amp;R %StudyVar</span><b class="${grrPctSVCls}">${fmt(pctSV.totalGRR,2)}%</b></div>
+    <div class="kpi"><span>Total Gage R&amp;R %Contribution</span><b>${fmt(pctCont.totalGRR,2)}%</b></div>
+    ${showTol?`<div class="kpi"><span>Total Gage R&amp;R %Tolerance</span><b>${fmt(pctTol.totalGRR,2)}%</b></div>`:''}
+    <div class="kpi"><span>ndc (Distinct Categories)</span><b>${Number.isFinite(ndc)?ndc:'—'}</b></div>
+    <div class="kpi"><span>判定 (AIAG)</span><b class="${grrPctSVCls}">${grrJudge}</b></div>
+  </div>
+  <h3 style="margin-top:14px">Two-Way ANOVA Table${useInteraction?' With Interaction':' (Reduced, no interaction)'}</h3>
+  <table><tr><th>Source</th><th>DF</th><th>SS</th><th>MS</th><th>F</th><th>P</th></tr>${anovaRows}</table>
+  <p class="small">Alpha to remove interaction term α=${alpha}</p>
+  <h3 style="margin-top:14px">Gage R&amp;R — Variance Components</h3>
+  <table><tr><th>Source</th><th>VarComp</th><th>%Contribution (of VarComp)</th></tr>${vcHtml}</table>
+  <h3 style="margin-top:14px">Gage R&amp;R — StdDev / Study Var${showTol?` / %Tolerance (Process Tolerance = ${tol})`:''}</h3>
+  <table><tr><th>Source</th><th>StdDev (SD)</th><th>Study Var (6·SD)</th><th>%Study Var</th>${showTol?'<th>%Tolerance (SV/Tol)</th>':''}</tr>${sdHtml}</table>
+  <p class="small">Number of Distinct Categories = <b>${Number.isFinite(ndc)?ndc:'—'}</b>${!showTol?' · 填写「公差」可显示 %Tolerance 列':''}</p>
+  <p class="small">✅ 该 ANOVA 引擎已与 Minitab (Micro-Vu OMM 24586 数据集) 逐项校准，%Contribution / %StudyVar / %Tolerance / ndc 完全一致到小数点后 4 位。</p>
+  <p class="small">下方 6 幅图为 Minitab 标准 <b>Gage R&amp;R Sixpack</b>：Components of Variation / R Chart by Operator / Xbar Chart by Operator / Measurement by Part / Measurement by Operator / Part×Operator Interaction。</p>`;
+  log(`Gage R&R (ANOVA, Crossed): ${vc} by ${pc}, ${oc}\n  Mode: ${useInteraction?'with interaction':'without interaction (reduced model)'}\n  ANOVA table:\n`+
+      anovaKeys.map(k=>{const r=res.anovaUsed[k];return `    ${k.padEnd(16)} DF=${r.DF}  SS=${fmtSci(r.SS,4)}  MS=${r.MS!==undefined?fmtSci(r.MS,4):'—'}  F=${r.F!==undefined&&Number.isFinite(r.F)?fmt(r.F,3):'—'}  P=${r.P!==undefined&&Number.isFinite(r.P)?fmt(r.P,3):'—'}`}).join('\n')+
+      `\n  Variance Components (% of Total):\n    Total Gage R&R    = ${fmtSci(varComp.totalGRR,4)}  (${fmt(pctCont.totalGRR,2)}%)\n      Repeatability   = ${fmtSci(varComp.repeat,4)}  (${fmt(pctCont.repeat,2)}%)\n      Reproducibility = ${fmtSci(varComp.reprod,4)}  (${fmt(pctCont.reprod,2)}%)\n        Operator      = ${fmtSci(varComp.operator,4)}  (${fmt(pctCont.operator,2)}%)`+
+      (useInteraction?`\n        Op*Part       = ${fmtSci(varComp.interaction,4)}  (${fmt(pctCont.interaction,2)}%)`:'')+
+      `\n    Part-to-Part      = ${fmtSci(varComp.part,4)}  (${fmt(pctCont.part,2)}%)\n    Total Variation   = ${fmtSci(varComp.total,4)}\n  StdDev / StudyVar (6·SD) / %StudyVar${showTol?` / %Tolerance (Tol=${tol})`:''}:\n`+
+      sdSources.map(([label,key])=>`    ${label.replace(/&nbsp;/g,' ').padEnd(24)} SD=${fmtSci(sd[key],4)}  SV=${fmtSci(6*sd[key],4)}  %SV=${fmt(pctSV[key],2)}${showTol?`  %Tol=${fmt(pctTol[key],2)}`:''}`).join('\n')+
+      `\n  ndc = ${Number.isFinite(ndc)?ndc:'—'}\n  Judgement (AIAG %StudyVar): ${grrJudge}\n`);
+  drawGRRSixpackANOVA(res,tol,vc,pc,oc);
+}
+function doeFullFactorial(n,rep,rand){
+  let design=[];for(let i=0;i<2**n;i++){let r=[];for(let j=0;j<n;j++)r.push((i>>j)&1?1:-1);for(let z=0;z<rep;z++)design.push([...r])}
+  if(rand)design.sort(()=>Math.random()-.5);
+  return design;
+}
+function runDOE(){
+  const n=Number(document.getElementById('doeN').value),rep=Number(document.getElementById('doeRep').value),rand=document.getElementById('doeRand').value==='yes';
+  const design=doeFullFactorial(n,rep,rand);
+  snapshot('生成 DOE 设计（覆盖工作表）');
+  columns=["StdOrder",...Array.from({length:n},(_,i)=>"Factor_"+String.fromCharCode(65+i)),"Response"];
+  rows=design.map((r,i)=>[i+1,...r,""]);renderWorksheet();showTab('worksheet');
+  log(`DOE created: 2^${n} full factorial, replicates=${rep}, runs=${design.length}, randomized=${rand}\n`);
+}
+
+function ctxClear(title,canvasId='chartCanvas'){
+  showTab('charts'); // must switch tab BEFORE sizing, else canvas parent is display:none (width=0) and chart renders blurry
+  return setupHiDPICanvas(canvasId,title);
+}
+function canvasCssSize(c){
+  return {w:parseFloat(c.style.width)||1100,h:parseFloat(c.style.height)||(c.id==='graphCanvas'?460:420)};
+}
+function drawHistogram(a,title){
+  const [c,x]=ctxClear("Histogram — "+title),sz=canvasCssSize(c),bins=Math.max(6,Math.round(Math.sqrt(a.length))),lo=Math.min(...a),hi=Math.max(...a),w=(hi-lo||1)/bins,count=Array(bins).fill(0);
+  a.forEach(v=>count[Math.min(bins-1,Math.floor((v-lo)/w))]++);const max=Math.max(...count),L=55,T=45,W=sz.w-85,H=sz.h-90;
+  const b={L,T,W,H};
+  drawYAxisTicks(x,b,0,max,v=>T+H-H*v/max,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,W,H);
+  count.forEach((v,i)=>{const bh=H*v/max;x.fillStyle="#7aa7c7";x.fillRect(L+i*W/bins,T+H-bh,W/bins-3,bh);
+    if(v>0){x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";x.fillText(String(v),L+(i+.5)*W/bins-1.5,T+H-bh-4);x.restore()}
+  });
+  // frequency polygon line through bar-top midpoints
+  x.strokeStyle="#b66a00";x.lineWidth=1.5;x.beginPath();
+  count.forEach((v,i)=>{const px=L+(i+.5)*W/bins-1.5,py=T+H-H*v/max;i?x.lineTo(px,py):x.moveTo(px,py)});
+  x.stroke();x.lineWidth=1;
+  return {c,x,L,T,W,H,lo,hi,bins};
+}
+function drawProbability(a,title){
+  const [c,x]=ctxClear("Normal Probability Plot — "+title),sz=canvasCssSize(c),n=a.length,m=mean(a),s=sd(a),L=60,T=45,W=sz.w-95,H=sz.h-90;
+  const z=a.map((_,i)=>Math.sqrt(2)*invErf(2*((i+.5)/n)-1));const minx=Math.min(...z),maxx=Math.max(...z),miny=Math.min(...a),maxy=Math.max(...a);
+  const b={L,T,W,H},xx=v=>L+(v-minx)/(maxx-minx||1)*W,yy=v=>T+H-(v-miny)/(maxy-miny||1)*H,dec=dataDecimals(a);
+  drawYAxisTicks(x,b,miny,maxy,yy,5);
+  x.strokeStyle="#475569";x.strokeRect(L,T,W,H);
+  // theoretical reference line: y = m + s*z
+  x.strokeStyle="#b42318";x.beginPath();x.moveTo(xx(minx),yy(m+s*minx));x.lineTo(xx(maxx),yy(m+s*maxx));x.stroke();
+  x.fillStyle="#1f5f99";
+  a.forEach((v,i)=>{const px=xx(z[i]),py=yy(v);x.beginPath();x.arc(px,py,4,0,Math.PI*2);x.fill()});
+  const step=labelStep(n,20);
+  a.forEach((v,i)=>{if(i%step===0){x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";x.fillText(fmt(v,dec),xx(z[i]),yy(v)-8);x.restore()}});
+}
+function invErf(x){const a=.147,ln=Math.log(1-x*x),p=2/(Math.PI*a)+ln/2;return Math.sign(x)*Math.sqrt(Math.sqrt(p*p-ln/a)-p)}
+function drawCapability(a,lsl,usl,m,s,title){
+  const hist=drawHistogram(a,title+" (Capability)"),{x,L,T,W,H,lo,hi,bins}=hist;
+  const xx=v=>L+(v-lo)/(hi-lo||1)*W,dec=dataDecimals([...a,lsl,usl,m]);
+  [[lsl,"LSL"],[usl,"USL"],[m,"Mean"]].forEach(([v,lbl])=>{
+    if(!Number.isFinite(v))return; // spec limit not provided (one-sided tolerance) — skip drawing this line
+    if(v<lo-1e-9||v>hi+1e-9)return; // skip if spec limit is off the histogram range
+    const px=xx(v);
+    x.save();x.strokeStyle=lbl==='Mean'?'#2f7f5f':'#b42318';x.setLineDash(lbl==='Mean'?[4,3]:[]);x.lineWidth=1.5;
+    x.beginPath();x.moveTo(px,T);x.lineTo(px,T+H);x.stroke();x.setLineDash([]);x.lineWidth=1;
+    x.fillStyle=lbl==='Mean'?'#2f7f5f':'#b42318';x.font="11px Segoe UI,Arial";x.textAlign="center";
+    x.fillText(`${lbl} ${fmt(v,dec)}`,px,T-4>18?T-4:14);x.restore();
+  });
+  x.save();x.fillStyle="#111827";x.font="11px Segoe UI,Arial";x.textAlign="left";
+  x.fillText(`LSL=${Number.isFinite(lsl)?fmt(lsl,dec):'N/A'}   Mean=${fmt(m,dec)}   USL=${Number.isFinite(usl)?fmt(usl,dec):'N/A'}   StDev=${fmt(s,Math.min(6,dec+1))}`,L,T+H+38);
+  x.restore();
+}
+function drawDualControl(topSeries,topLimits,topTitle,bottomSeries,bottomLimits,bottomTitle,mainTitle,canvasId='chartCanvas'){
+  const [c,x]=ctxClear(mainTitle,canvasId),sz=canvasCssSize(c);
+  const L=60,R=35,W=sz.w-L-R,gap=30,panelH=(sz.h-90-gap)/2,T1=45,T2=T1+panelH+gap;
+  drawControlPanel(x,topSeries,topLimits,topTitle,L,T1,W,panelH);
+  drawControlPanel(x,bottomSeries,bottomLimits,bottomTitle,L,T2,W,panelH);
+}
+function drawControlPanel(x,a,limits,title,L,T,W,H){
+  const [lcl,cl,ucl]=limits,min=Math.min(lcl,...a),max=Math.max(ucl,...a),dec=dataDecimals([...a,lcl,cl,ucl]);
+  const b={L,T,W,H},yy=v=>T+H-(v-min)/(max-min||1)*H,xx=i=>L+i*W/Math.max(1,a.length-1);
+  x.save();x.font="600 12px Segoe UI,Arial";x.fillStyle="#111827";x.textAlign="left";x.fillText(title,L,T-8);x.restore();
+  drawYAxisTicks(x,b,min,max,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,W,H);
+  [[lcl,"LCL"],[cl,"CL"],[ucl,"UCL"]].forEach(([v,n],i)=>{x.strokeStyle=i===1?"#2f7f5f":"#b42318";x.beginPath();x.moveTo(L,yy(v));x.lineTo(L+W,yy(v));x.stroke();x.save();x.font="10px Segoe UI,Arial";x.fillStyle=i===1?"#2f7f5f":"#b42318";x.fillText(`${n} ${fmt(v,dec)}`,L+W-95,yy(v)-4);x.restore()});
+  x.strokeStyle="#1f5f99";x.beginPath();a.forEach((v,i)=>i?x.lineTo(xx(i),yy(v)):x.moveTo(xx(i),yy(v)));x.stroke();
+  const step=labelStep(a.length,18);
+  a.forEach((v,i)=>{
+    const oob=v>ucl||v<lcl;
+    x.fillStyle=oob?"#b42318":"#1f5f99";x.beginPath();x.arc(xx(i),yy(v),4,0,Math.PI*2);x.fill();
+    if(i%step===0||oob){x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle=oob?"#b42318":"#1d2733";x.fillText(fmt(v,dec),xx(i),yy(v)+(v>=(min+max)/2?14:-8));x.restore()}
+  });
+}
+/* ---------- cavity-stratified chart gallery (Xbar-R / I-MR "by cavity, not combined") ---------- */
+let cavityCharts=null; // null = normal single-chart mode; else {items:[{level,topSeries,topLimits,topTitle,bottomSeries,bottomLimits,bottomTitle,mainTitle}]}
+let chartViewMode='stack';
+function resetChartsContainer(){
+  cavityCharts=null;
+  const bar=document.getElementById('chartModeBar'); if(bar)bar.style.display='none';
+  document.getElementById('chartsContainer').innerHTML='<canvas id="chartCanvas" width="1100" height="420"></canvas>';
+}
+function buildCavityCharts(items){
+  cavityCharts={items};
+  chartViewMode='stack';
+  showTab('charts');
+  const bar=document.getElementById('chartModeBar');
+  bar.style.display='flex';
+  document.getElementById('chartModeStackBtn').classList.add('primary');
+  document.getElementById('chartModeSingleBtn').classList.remove('primary');
+  const picker=document.getElementById('chartCavityPicker');
+  picker.innerHTML=items.map((it,i)=>`<option value="${i}">${esc(it.level)}</option>`).join('');
+  picker.style.display='none';
+  renderCavityChartsStacked();
+}
+function setChartMode(mode){
+  if(!cavityCharts)return;
+  chartViewMode=mode;
+  document.getElementById('chartModeStackBtn').classList.toggle('primary',mode==='stack');
+  document.getElementById('chartModeSingleBtn').classList.toggle('primary',mode==='single');
+  document.getElementById('chartCavityPicker').style.display=mode==='single'?'inline-block':'none';
+  if(mode==='stack')renderCavityChartsStacked(); else renderSingleCavityChart();
+}
+let renderedCavityLabels=[]; // parallel to canvases currently in #chartsContainer, in DOM order
+function renderCavityChartsStacked(){
+  const container=document.getElementById('chartsContainer');
+  container.innerHTML=cavityCharts.items.map((it,i)=>`<div style="margin-bottom:22px"><canvas id="chartCanvas_${i}" width="1100" height="420"></canvas></div>`).join('');
+  cavityCharts.items.forEach((it,i)=>drawDualControl(it.topSeries,it.topLimits,it.topTitle,it.bottomSeries,it.bottomLimits,it.bottomTitle,it.mainTitle,'chartCanvas_'+i));
+  renderedCavityLabels=cavityCharts.items.map(it=>it.level);
+}
+function renderSingleCavityChart(){
+  const container=document.getElementById('chartsContainer');
+  container.innerHTML='<canvas id="chartCanvas" width="1100" height="420"></canvas>';
+  const idx=Number(document.getElementById('chartCavityPicker').value)||0;
+  const it=cavityCharts.items[idx];
+  drawDualControl(it.topSeries,it.topLimits,it.topTitle,it.bottomSeries,it.bottomLimits,it.bottomTitle,it.mainTitle,'chartCanvas');
+  renderedCavityLabels=[it.level];
+}
+function drawScatter(xs,ys,b0,b1,title){
+  const [c,x]=ctxClear("Fitted Line Plot — "+title),sz=canvasCssSize(c),L=60,T=45,W=sz.w-95,H=sz.h-90,minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  const b={L,T,W,H},xx=v=>L+(v-minx)/(maxx-minx||1)*W,yy=v=>T+H-(v-miny)/(maxy-miny||1)*H,dec=dataDecimals(ys);
+  drawYAxisTicks(x,b,miny,maxy,yy,5);
+  x.strokeStyle="#475569";x.strokeRect(L,T,W,H);
+  drawXAxisTicksNumeric(x,b,minx,maxx,xx,5);
+  x.fillStyle="#1f5f99";xs.forEach((v,i)=>{x.beginPath();x.arc(xx(v),yy(ys[i]),4,0,Math.PI*2);x.fill()});
+  if(xs.length<=15)xs.forEach((v,i)=>{x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";x.fillText(fmt(ys[i],dec),xx(v),yy(ys[i])-8);x.restore()});
+  x.strokeStyle="#b42318";x.lineWidth=1.5;x.beginPath();x.moveTo(xx(minx),yy(b0+b1*minx));x.lineTo(xx(maxx),yy(b0+b1*maxx));x.stroke();x.lineWidth=1;
+}
+
+
+const graphGroupState={};
+function groupSelector(id){
+  graphGroupState[id]=[];
+  return `<div class="group-builder">
+    <select id="${id}_select"><option value="">选择分组列</option>${colOptions()}</select>
+    <button type="button" onclick="addGraphGroup('${id}')">添加</button>
+  </div><div id="${id}_list" class="group-list"></div>`;
+}
+function addGraphGroup(id){
+  const sel=document.getElementById(id+'_select'),v=sel.value;
+  if(!v)return;
+  graphGroupState[id]??=[];
+  if(!graphGroupState[id].includes(v))graphGroupState[id].push(v);
+  renderGraphGroups(id);
+}
+function removeGraphGroup(id,i){
+  graphGroupState[id].splice(i,1);renderGraphGroups(id);
+}
+function renderGraphGroups(id){
+  const box=document.getElementById(id+'_list');if(!box)return;
+  box.innerHTML=(graphGroupState[id]||[]).map((v,i)=>`<span class="group-chip">${esc(v)}<button onclick="removeGraphGroup('${id}',${i})">×</button></span>`).join('');
+}
+function groupKeyFromRow(row, groupCols){
+  if(!groupCols || !groupCols.length)return 'All';
+  return groupCols.map(c=>row[columns.indexOf(c)]).join(' | ');
+}
+
+function drawHierarchicalLabels(ctx, box, keys, groupCols){
+  if(!keys.length)return;
+  const levels=Math.max(1,groupCols.length);
+  ctx.font="12px Segoe UI,Arial";
+  ctx.textAlign="center";
+  ctx.fillStyle="#111827";
+  keys.forEach((key,i)=>{
+    const parts=groupCols.length?String(key).split(' | '):[String(key)];
+    const cx=box.L+(i+.5)*box.W/keys.length;
+    parts.forEach((part,level)=>{
+      ctx.fillText(part,cx,box.T+box.H+20+level*16);
+    });
+  });
+  if(groupCols.length){
+    ctx.textAlign="left";
+    ctx.fillStyle="#64748b";
+    groupCols.forEach((name,level)=>ctx.fillText(name,8,box.T+box.H+20+level*16));
+  }
+  ctx.textAlign="start";
+}
+
+function groupedNumericMulti(vcol, groupCols){
+  const vi=columns.indexOf(vcol),g={};
+  rows.forEach(r=>{
+    const v=cellNum(r[vi]),k=groupKeyFromRow(r,groupCols);
+    if(Number.isFinite(v) && k.replace(/\s*\|\s*/g,'')!=="")(g[k]??=[]).push(v);
+  });
+  return g;
+}
+function setupHiDPICanvas(canvasId,title){
+  const c=document.getElementById(canvasId);
+  const parentWidth=Math.floor((c.parentElement?.getBoundingClientRect().width||1100)-4);const cssWidth=Math.max(300,Math.min(1400,parentWidth));
+  const cssHeight=canvasId==='graphCanvas'?460:420;
+  const dpr=Math.max(2,window.devicePixelRatio||1);
+  c.width=Math.floor(cssWidth*dpr);
+  c.height=Math.floor(cssHeight*dpr);
+  c.style.width=cssWidth+'px';
+  c.style.height=cssHeight+'px';
+  const x=c.getContext('2d');
+  x.setTransform(dpr,0,0,dpr,0,0);
+  x.clearRect(0,0,cssWidth,cssHeight);
+  x.imageSmoothingEnabled=true;
+  x.imageSmoothingQuality='high';
+  x.fillStyle="#111827";x.font="600 17px Segoe UI,Arial";x.fillText(title,20,27);
+  return [c,x,cssWidth,cssHeight];
+}
+
+function openGraph(type){
+  trackSidebarOpen('graph',type);
+  showTab('graphbuilder');
+  const title=document.getElementById('graphTitle'), form=document.getElementById('graphForm');
+  const opts=colOptions();
+  const run=(fn)=>`<div class="graph-options"><button class="primary" onclick="runTracked('graph','${type}','${fn}')">生成图形</button><button onclick="exportGraphPNG()">导出高清 PNG</button></div>`;
+  if(type==='histogram'){
+    title.textContent='直方图 Histogram';
+    form.innerHTML=`<div class="graph-controls">
+      <div><label>数值列</label><select id="gHistCol">${opts}</select></div>
+      <div><label>分箱数量</label><input id="gHistBins" type="number" min="4" max="30" value="10"></div>
+      <div><label>显示均值线</label><select id="gHistMean"><option value="yes">是</option><option value="no">否</option></select></div>
+    </div>${run('renderHistogramGraph()')}`;
+  }
+  if(type==='boxplot'){
+    title.textContent='箱线图 Boxplot';
+    form.innerHTML=`<div class="graph-controls">
+      <div><label>数值列</label><select id="gBoxVal">${opts}</select></div>
+      <div><label>分组列（可多层）</label>${groupSelector('gBoxGroups')}</div>
+      <div><label>显示异常值</label><select id="gBoxOut"><option value="yes">是</option><option value="no">否</option></select></div>
+    </div>${run('renderBoxplotGraph()')}`;
+  }
+  if(type==='individual'){
+    title.textContent='单值图 Individual Value Plot';
+    form.innerHTML=`<div class="graph-controls">
+      <div><label>数值列</label><select id="gIndVal">${opts}</select></div>
+      <div><label>分组列（可多层）</label>${groupSelector('gIndGroups')}</div>
+      <div><label>连接数据点</label><select id="gIndLine"><option value="no">否</option><option value="yes">是</option></select></div>
+    </div>${run('renderIndividualGraph()')}`;
+  }
+  if(type==='scatter'){
+    title.textContent='散点图 Scatter Plot';
+    form.innerHTML=`<div class="graph-controls">
+      <div><label>X 列</label><select id="gScX">${opts}</select></div>
+      <div><label>Y 列</label><select id="gScY">${opts}</select></div>
+      <div><label>分组列（可多层）</label>${groupSelector('gScGroups')}</div>
+      <div><label>拟合线</label><select id="gScFit"><option value="linear" selected>线性</option><option value="none">无</option></select></div>
+    </div>${run('renderScatterGraph()')}`;
+  }
+  if(type==='dotplot'){
+    title.textContent='点图 Dot Plot';
+    form.innerHTML=`<div class="graph-controls">
+      <div><label>数值列</label><select id="gDotVal">${opts}</select></div>
+      <div><label>分组列（可多层）</label>${groupSelector('gDotGroups')}</div>
+      <div><label>小数位</label><input id="gDotDec" type="number" min="0" max="6" value="2"></div>
+    </div>${run('renderDotplotGraph()')}`;
+  }
+  if(type==='timeseries'){
+    title.textContent='时间序列图 Time Series Plot';
+    form.innerHTML=`<div class="graph-controls">
+      <div><label>数值列</label><select id="gTsVal">${opts}</select></div>
+      <div><label>时间/顺序列（可选）</label><select id="gTsTime"><option value="">按行顺序</option>${opts}</select></div>
+      <div><label>移动平均窗口</label><input id="gTsMA" type="number" min="1" max="20" value="1"></div>
+    </div>${run('renderTimeSeriesGraph()')}`;
+  }
+  if(type==='pareto'){
+    title.textContent='Pareto 图';
+    form.innerHTML=`<div class="graph-controls">
+      <div><label>类别列</label><select id="gParCat">${opts}</select></div>
+      <div><label>频数列（可选）</label><select id="gParFreq"><option value="">自动计数</option>${opts}</select></div>
+      <div><label>显示累计百分比</label><select id="gParCum"><option value="yes">是</option><option value="no">否</option></select></div>
+    </div>${run('renderParetoGraph()')}`;
+  }
+}
+function graphCtx(title){
+  return setupHiDPICanvas('graphCanvas',title);
+}
+function axisBox(x,c,L=70,T=50,R=35,B=60){
+  const cw=parseFloat(c.style.width)||1100,ch=parseFloat(c.style.height)||460;
+  const W=cw-L-R,H=ch-T-B;
+  x.strokeStyle="#475569";x.lineWidth=1;x.strokeRect(L,T,W,H);
+  return {L,T,W,H};
+}
+
+
+function exportGraphPNG(){
+  const c=document.getElementById('graphCanvas');
+  const a=document.createElement('a');a.download='QuaStat_Graph.png';a.href=c.toDataURL('image/png');a.click();
+}
+function exportChartPNG(){
+  const canvases=document.querySelectorAll('#chartsContainer canvas');
+  canvases.forEach((c,i)=>{
+    const lvl=cavityCharts&&renderedCavityLabels[i]!==undefined?String(renderedCavityLabels[i]):null;
+    const label=lvl?('_'+lvl.replace(/[^a-z0-9_-]+/gi,'_')):(canvases.length>1?'_'+(i+1):'');
+    const a=document.createElement('a');a.download=`QuaStat_Chart${label}.png`;a.href=c.toDataURL('image/png');a.click();
+  });
+}
+function renderHistogramGraph(){
+  const col=document.getElementById('gHistCol').value,a=nums(col),bins=Number(document.getElementById('gHistBins').value)||10;
+  if(a.length<2)return alert('有效数值不足');
+  const [c,x]=graphCtx(`Histogram — ${col}`),b=axisBox(x,c),lo=Math.min(...a),hi=Math.max(...a),w=(hi-lo||1)/bins,count=Array(bins).fill(0);
+  a.forEach(v=>count[Math.min(bins-1,Math.floor((v-lo)/w))]++);
+  const mx=Math.max(...count);
+  drawYAxisTicks(x,b,0,mx,v=>b.T+b.H-b.H*v/mx,4);
+  count.forEach((v,i)=>{const bh=b.H*v/mx;x.fillStyle="#7aa7c7";x.fillRect(b.L+i*b.W/bins,b.T+b.H-bh,b.W/bins-3,bh);
+    if(v>0){x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";x.fillText(String(v),b.L+(i+.5)*b.W/bins-1.5,b.T+b.H-bh-4);x.restore()}
+  });
+  // frequency polygon line
+  x.strokeStyle="#b66a00";x.lineWidth=1.5;x.beginPath();
+  count.forEach((v,i)=>{const px=b.L+(i+.5)*b.W/bins-1.5,py=b.T+b.H-b.H*v/mx;i?x.lineTo(px,py):x.moveTo(px,py)});
+  x.stroke();x.lineWidth=1;
+  if(document.getElementById('gHistMean').value==='yes'){const m=mean(a),px=b.L+(m-lo)/(hi-lo||1)*b.W;x.strokeStyle="#b42318";x.beginPath();x.moveTo(px,b.T);x.lineTo(px,b.T+b.H);x.stroke();x.fillStyle="#b42318";x.fillText(`Mean ${fmt(m)}`,px+5,b.T+15)}
+  document.getElementById('graphSummary').textContent=`N=${a.length}, Mean=${fmt(mean(a))}, StDev=${fmt(sd(a))}`;
+  log(`Graph: Histogram of ${col}\n`);
+}
+function renderBoxplotGraph(){
+  const v=document.getElementById('gBoxVal').value,groups=graphGroupState.gBoxGroups||[],g=groupedNumericMulti(v,groups),keys=Object.keys(g);
+  if(!keys.length)return alert('没有有效数据');
+  const all=Object.values(g).flat(),[c,x]=graphCtx(`Boxplot — ${v}`),b=axisBox(x,c,70,50,35,70+groups.length*16),lo=Math.min(...all),hi=Math.max(...all),yy=z=>b.T+b.H-(z-lo)/(hi-lo||1)*b.H,dec=dataDecimals(all),crowded=keys.length>8;
+  drawYAxisTicks(x,b,lo,hi,yy);
+  keys.forEach((k,i)=>{
+    const a=[...g[k]].sort((p,q)=>p-q),q1=quantile(a,.25),q2=quantile(a,.5),q3=quantile(a,.75),iqr=q3-q1;
+    const fenceLo=q1-1.5*iqr,fenceHi=q3+1.5*iqr,inLo=a.filter(z=>z>=fenceLo),inHi=a.filter(z=>z<=fenceHi);
+    const low=inLo.length?Math.min(...inLo):q1,high=inHi.length?Math.max(...inHi):q3;
+    const cx=b.L+(i+.5)*b.W/keys.length,bw=Math.min(70,b.W/keys.length*.45);
+    x.strokeStyle="#1f5f99";x.strokeRect(cx-bw/2,yy(q3),bw,yy(q1)-yy(q3));x.beginPath();x.moveTo(cx-bw/2,yy(q2));x.lineTo(cx+bw/2,yy(q2));x.moveTo(cx,yy(high));x.lineTo(cx,yy(q3));x.moveTo(cx,yy(low));x.lineTo(cx,yy(q1));x.stroke();
+    x.save();x.font="10px Segoe UI,Arial";x.textAlign="left";x.textBaseline="middle";x.fillStyle="#1d2733";
+    if(!crowded){x.fillText(`Q3 ${fmt(q3,dec)}`,cx+bw/2+4,yy(q3));x.fillText(`Q1 ${fmt(q1,dec)}`,cx+bw/2+4,yy(q1))}
+    x.fillText(`Med ${fmt(q2,dec)}`,cx+bw/2+4,yy(q2));
+    x.restore();
+    if(document.getElementById('gBoxOut').value==='yes')a.filter(z=>z<low||z>high).forEach(z=>{x.fillStyle="#b42318";x.beginPath();x.arc(cx,yy(z),4,0,Math.PI*2);x.fill()});
+  });
+  drawHierarchicalLabels(x,b,keys,groups);
+  document.getElementById('graphSummary').textContent=`组数=${keys.length}; 总样本数=${all.length}`+(crowded?'（分组较多，仅显示中位数标签）':'');
+  log(`Graph: Boxplot of ${v}${groups.length?' by '+groups.join(', '):''}\n`);
+}
+function renderIndividualGraph(){
+  const v=document.getElementById('gIndVal').value,groups=graphGroupState.gIndGroups||[],g=groupedNumericMulti(v,groups),keys=Object.keys(g),all=Object.values(g).flat();
+  if(!all.length)return alert('没有有效数据');
+  const [c,x]=graphCtx(`Individual Value Plot — ${v}`),b=axisBox(x,c,70,50,35,70+groups.length*16),lo=Math.min(...all),hi=Math.max(...all),yy=z=>b.T+b.H-(z-lo)/(hi-lo||1)*b.H,dec=dataDecimals(all);
+  drawYAxisTicks(x,b,lo,hi,yy);
+  keys.forEach((k,i)=>{const cx=b.L+(i+.5)*b.W/keys.length,arr=g[k],step=labelStep(arr.length,10);if(document.getElementById('gIndLine').value==='yes'){x.strokeStyle="#94a3b8";x.beginPath();arr.forEach((z,j)=>{const px=cx+(j-(arr.length-1)/2)*8;j?x.lineTo(px,yy(z)):x.moveTo(px,yy(z))});x.stroke()}
+    arr.forEach((z,j)=>{const px=cx+(j-(arr.length-1)/2)*8;x.fillStyle="#1f5f99";x.beginPath();x.arc(px,yy(z),4,0,Math.PI*2);x.fill();if(j%step===0)drawPointLabel(x,px,yy(z),fmt(z,dec))});
+    x.save();x.strokeStyle="#2f7f5f";x.setLineDash([3,3]);x.beginPath();x.moveTo(cx-25,yy(mean(arr)));x.lineTo(cx+25,yy(mean(arr)));x.stroke();x.restore();});
+  drawHierarchicalLabels(x,b,keys,groups);
+  document.getElementById('graphSummary').textContent=`N=${all.length}, Mean=${fmt(mean(all),dec)}`;
+  log(`Graph: Individual Value Plot of ${v}${groups.length?' by '+groups.join(', '):''}\n`);
+}
+function renderScatterGraph(){
+  const xc=document.getElementById('gScX').value,yc=document.getElementById('gScY').value,groupsSel=graphGroupState.gScGroups||[],xi=columns.indexOf(xc),yi=columns.indexOf(yc),pts=[];
+  rows.forEach(r=>{const xv=cellNum(r[xi]),yv=cellNum(r[yi]);if(Number.isFinite(xv)&&Number.isFinite(yv))pts.push({x:xv,y:yv,g:groupKeyFromRow(r,groupsSel)})});
+  if(pts.length<2)return alert('有效配对不足');
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),[c,x]=graphCtx(`Scatter Plot — ${yc} vs ${xc}`),b=axisBox(x,c),minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys),xx=z=>b.L+(z-minx)/(maxx-minx||1)*b.W,yy=z=>b.T+b.H-(z-miny)/(maxy-miny||1)*b.H,dec=dataDecimals(ys);
+  drawYAxisTicks(x,b,miny,maxy,yy,5);
+  drawXAxisTicksNumeric(x,b,minx,maxx,xx,5);
+  const groups=[...new Set(pts.map(p=>p.g))];
+  pts.forEach((p,i)=>{x.fillStyle=["#1f5f99","#2f7f5f","#b66a00","#7c3aed","#b42318"][groups.indexOf(p.g)%5];x.beginPath();x.arc(xx(p.x),yy(p.y),4,0,Math.PI*2);x.fill()});
+  if(pts.length<=15)pts.forEach(p=>drawPointLabel(x,xx(p.x),yy(p.y),fmt(p.y,dec)));
+  let info=`N=${pts.length}`;
+  if(document.getElementById('gScFit').value==='linear'){const xm=mean(xs),ym=mean(ys),slope=pts.reduce((s,p)=>s+(p.x-xm)*(p.y-ym),0)/pts.reduce((s,p)=>s+(p.x-xm)**2,0),int=ym-slope*xm;x.strokeStyle="#b42318";x.lineWidth=1.5;x.beginPath();x.moveTo(xx(minx),yy(int+slope*minx));x.lineTo(xx(maxx),yy(int+slope*maxx));x.stroke();x.lineWidth=1;info+=`, Y=${fmt(int,dec)}+${fmt(slope,Math.min(6,dec+2))}X`}
+  document.getElementById('graphSummary').textContent=info;
+  log(`Graph: Scatter Plot of ${yc} versus ${xc}\n`);
+}
+function renderDotplotGraph(){
+  const v=document.getElementById('gDotVal').value,groups=graphGroupState.gDotGroups||[],dec=Number(document.getElementById('gDotDec').value)||2,g=groupedNumericMulti(v,groups),keys=Object.keys(g),all=Object.values(g).flat();
+  if(!all.length)return alert('没有有效数据');
+  const [c,x]=graphCtx(`Dot Plot — ${v}`),b=axisBox(x,c),lo=Math.min(...all),hi=Math.max(...all),xx=z=>b.L+(z-lo)/(hi-lo||1)*b.W;
+  drawXAxisTicksNumeric(x,b,lo,hi,xx,6);
+  keys.forEach((k,gi)=>{const base=b.T+(gi+1)*b.H/(keys.length+1),counts={},m=mean(g[k]);
+    x.save();x.strokeStyle="#2f7f5f";x.setLineDash([3,3]);x.beginPath();x.moveTo(xx(m),b.T);x.lineTo(xx(m),b.T+b.H);x.stroke();x.restore();
+    g[k].sort((a,b)=>a-b).forEach(z=>{const key=z.toFixed(dec),n=counts[key]||0;counts[key]=n+1;x.fillStyle="#1f5f99";x.beginPath();x.arc(xx(z),base-n*10,4,0,Math.PI*2);x.fill();if(n===0)drawPointLabel(x,xx(z),base,z.toFixed(dec),14)});
+    x.save();x.font="10px Segoe UI,Arial";x.textAlign="left";x.fillStyle="#64748b";x.fillText(keys.length>1?k:`Mean ${fmt(m,dec)}`,b.L+b.W-90,base-4);x.restore();
+  });
+  document.getElementById('graphSummary').textContent=`N=${all.length}, 组数=${keys.length}`;
+  log(`Graph: Dot Plot of ${v}${groups.length?' by '+groups.join(', '):''}\n`);
+}
+function renderTimeSeriesGraph(){
+  const vc=document.getElementById('gTsVal').value,tc=document.getElementById('gTsTime').value,vi=columns.indexOf(vc),ti=columns.indexOf(tc),pts=[];
+  rows.forEach((r,i)=>{const y=cellNum(r[vi]);if(Number.isFinite(y))pts.push({x:tc?r[ti]:i+1,y})});
+  if(pts.length<2)return alert('数据不足');
+  const ma=Math.max(1,Number(document.getElementById('gTsMA').value)||1),ys=pts.map(p=>p.y),[c,x]=graphCtx(`Time Series Plot — ${vc}`),b=axisBox(x,c),lo=Math.min(...ys),hi=Math.max(...ys),xx=i=>b.L+i*b.W/Math.max(1,pts.length-1),yy=z=>b.T+b.H-(z-lo)/(hi-lo||1)*b.H,dec=dataDecimals(ys);
+  drawYAxisTicks(x,b,lo,hi,yy,5);
+  x.strokeStyle="#1f5f99";x.beginPath();pts.forEach((p,i)=>i?x.lineTo(xx(i),yy(p.y)):x.moveTo(xx(i),yy(p.y)));x.stroke();
+  const step=labelStep(pts.length,20);
+  pts.forEach((p,i)=>{x.fillStyle="#1f5f99";x.beginPath();x.arc(xx(i),yy(p.y),3,0,Math.PI*2);x.fill();if(i%step===0)drawPointLabel(x,xx(i),yy(p.y),fmt(p.y,dec))});
+  if(ma>1){const mov=ys.map((_,i)=>i+1<ma?NaN:mean(ys.slice(i-ma+1,i+1)));x.strokeStyle="#b42318";x.lineWidth=1.5;x.beginPath();mov.forEach((z,i)=>{if(Number.isFinite(z)){if(i===ma-1)x.moveTo(xx(i),yy(z));else x.lineTo(xx(i),yy(z))}});x.stroke();x.lineWidth=1}
+  // X-axis category ticks (thinned)
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#64748b";
+  pts.forEach((p,i)=>{if(i%step===0)x.fillText(String(p.x),xx(i),b.T+b.H+14)});
+  x.restore();
+  document.getElementById('graphSummary').textContent=`N=${pts.length}, 移动平均窗口=${ma}`;
+  log(`Graph: Time Series Plot of ${vc}\n`);
+}
+function renderParetoGraph(){
+  const cc=document.getElementById('gParCat').value,fc=document.getElementById('gParFreq').value,ci=columns.indexOf(cc),fi=columns.indexOf(fc),m={};
+  rows.forEach(r=>{const k=r[ci];if(k==="")return;const f=fc?cellNum(r[fi]):1;if(Number.isFinite(f))(m[k]??=0,m[k]+=f)});
+  const items=Object.entries(m).sort((a,b)=>b[1]-a[1]);if(!items.length)return alert('没有有效类别');
+  const total=items.reduce((s,x)=>s+x[1],0),[c,x]=graphCtx(`Pareto Chart — ${cc}`),b=axisBox(x,c,70,50,45,80),mx=items[0][1];
+  drawYAxisTicks(x,b,0,mx,v=>b.T+b.H-b.H*v/mx,4);
+  items.forEach(([k,v],i)=>{
+    const bh=b.H*v/mx,px0=b.L+i*b.W/items.length;
+    x.fillStyle="#7aa7c7";x.fillRect(px0,b.T+b.H-bh,b.W/items.length-4,bh);
+    x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";
+    x.fillText(fmt(v,0),px0+(b.W/items.length-4)/2,b.T+b.H-bh-4);x.restore();
+    x.save();x.translate(b.L+(i+.5)*b.W/items.length,b.T+b.H+15);x.rotate(-Math.PI/5);x.fillStyle="#111827";x.textAlign="right";x.font="11px Segoe UI,Arial";x.fillText(k,0,0);x.restore();
+  });
+  if(document.getElementById('gParCum').value==='yes'){
+    let cum=0;x.strokeStyle="#b42318";x.lineWidth=1.5;x.beginPath();
+    const cumPts=[];
+    items.forEach(([k,v],i)=>{cum+=v;const px=b.L+(i+.5)*b.W/items.length,py=b.T+b.H-(cum/total)*b.H;i?x.lineTo(px,py):x.moveTo(px,py);cumPts.push([px,py,cum])});
+    x.stroke();x.lineWidth=1;
+    cumPts.forEach(([px,py,cum])=>{x.fillStyle="#b42318";x.beginPath();x.arc(px,py,3,0,Math.PI*2);x.fill();
+      x.save();x.font="10px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#b42318";x.fillText(fmt(100*cum/total,1)+"%",px,py-8);x.restore();});
+    // right-side cumulative % axis
+    x.save();x.font="11px Segoe UI,Arial";x.textAlign="left";x.fillStyle="#b42318";
+    [0,25,50,75,100].forEach(p=>{const py=b.T+b.H-(p/100)*b.H;x.fillText(p+"%",b.L+b.W+4,py+3)});
+    x.restore();
+  }
+  document.getElementById('graphSummary').textContent=`类别数=${items.length}, 总频数=${fmt(total,0)}`;
+  log(`Graph: Pareto Chart of ${cc}\n`);
+}
+
+/* ============================================================
+   V5.4 — Minitab-style Sixpack (Capability + Gage R&R)
+   V5.4.1 — Gage R&R rewritten as full crossed Two-Way ANOVA
+   ============================================================ */
+function setupSixpackCanvas(canvasId,title,cssH){
+  const c=document.getElementById(canvasId);
+  const pw=Math.floor((c.parentElement?.getBoundingClientRect().width||500)-4);
+  const cssWidth=Math.max(280,Math.min(720,pw)),cssHeight=cssH||300;
+  const dpr=Math.max(2,window.devicePixelRatio||1);
+  c.width=Math.floor(cssWidth*dpr);c.height=Math.floor(cssHeight*dpr);
+  c.style.width=cssWidth+'px';c.style.height=cssHeight+'px';
+  const x=c.getContext('2d');
+  x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,cssWidth,cssHeight);
+  x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+  x.fillStyle="#111827";x.font="600 13px Segoe UI,Arial";x.textAlign="left";x.fillText(title,12,18);
+  return [c,x,cssWidth,cssHeight];
+}
+function buildSixpackContainer(canvasIds,headerTitle,append){
+  showTab('charts');
+  cavityCharts=null;
+  const bar=document.getElementById('chartModeBar');if(bar)bar.style.display='none';
+  const container=document.getElementById('chartsContainer');
+  if(!append)container.innerHTML='';
+  const section=document.createElement('div');
+  section.style.marginBottom='18px';
+  section.innerHTML=`<div style="font-weight:600;margin:6px 0 10px;font-size:14px;color:#17324d;border-left:4px solid #1f5f99;padding-left:8px">${esc(headerTitle)}</div>`;
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px';
+  canvasIds.forEach(id=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<canvas id="${id}" width="600" height="300"></canvas>`;
+    grid.appendChild(wrap);
+  });
+  section.appendChild(grid);
+  container.appendChild(section);
+  renderedCavityLabels=canvasIds.map((_,i)=>headerTitle.replace(/[^a-z0-9]+/gi,'_')+'_P'+(i+1));
+}
+/* ---------- Capability Sixpack ---------- */
+function buildCapabilitySubgroups(col,method,subCol,size,rowSubset){
+  const subgroups=[],labels=[];
+  const vi=columns.indexOf(col);
+  const src=rowSubset||rows;
+  if(method==='column'&&subCol){
+    const si=columns.indexOf(subCol),g={};
+    src.forEach(r=>{const v=cellNum(r[vi]),k=r[si];if(Number.isFinite(v)&&k!=="")(g[k]??=[]).push(v)});
+    Object.keys(g).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(k=>{subgroups.push(g[k]);labels.push(k)});
+  }else if(method==='size'&&size>=2){
+    const vals=src.map(r=>cellNum(r[vi])).filter(Number.isFinite);
+    for(let i=0;i+size<=vals.length;i+=size){subgroups.push(vals.slice(i,i+size));labels.push(String(subgroups.length))}
+  }else{
+    const vals=src.map(r=>cellNum(r[vi])).filter(Number.isFinite);
+    vals.forEach((v,i)=>{subgroups.push([v]);labels.push(String(i+1))});
+  }
+  return {subgroups,labels};
+}
+function drawSPControl(canvasId,series,limits,title){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,title,300);
+  const [lcl,cl,ucl]=limits,L=48,T=32,PW=W-L-30,PH=H-T-40;
+  const a=series.filter(Number.isFinite);
+  if(!a.length){x.fillStyle="#64748b";x.fillText("(no data)",L,T+PH/2);return}
+  const min=Math.min(lcl,...a),max=Math.max(ucl,...a);
+  const pad=(max-min)*0.05||1;
+  const lo=min-pad,hi=max+pad;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-(v-lo)/(hi-lo||1)*PH;
+  const xx=i=>L+(series.length<=1?PW/2:i*PW/Math.max(1,series.length-1));
+  drawYAxisTicks(x,b,lo,hi,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  [[lcl,"LCL","#b42318"],[cl,"CL","#2f7f5f"],[ucl,"UCL","#b42318"]].forEach(([v,n,col])=>{
+    x.strokeStyle=col;x.beginPath();x.moveTo(L,yy(v));x.lineTo(L+PW,yy(v));x.stroke();
+    x.save();x.font="9px Segoe UI,Arial";x.fillStyle=col;x.textAlign="right";
+    x.fillText(`${n}=${fmt(v,3)}`,L+PW-4,yy(v)-2);x.restore();
+  });
+  x.strokeStyle="#1f5f99";x.lineWidth=1.2;x.beginPath();
+  series.forEach((v,i)=>{if(!Number.isFinite(v))return;const px=xx(i),py=yy(v);i?x.lineTo(px,py):x.moveTo(px,py)});
+  x.stroke();x.lineWidth=1;
+  series.forEach((v,i)=>{
+    if(!Number.isFinite(v))return;
+    const oob=v>ucl||v<lcl;
+    x.fillStyle=oob?"#b42318":"#1f5f99";x.beginPath();x.arc(xx(i),yy(v),2.8,0,Math.PI*2);x.fill();
+  });
+}
+function drawSPLast25(canvasId,subgroups){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Last 25 Subgroups',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-40;
+  const last=subgroups.slice(-25),all=last.flat().filter(Number.isFinite);
+  if(!all.length){x.fillStyle="#64748b";x.fillText("(no data)",L,T+PH/2);return}
+  const lo=Math.min(...all),hi=Math.max(...all),pad=(hi-lo)*0.1||1;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-(v-(lo-pad))/((hi+pad)-(lo-pad)||1)*PH;
+  drawYAxisTicks(x,b,lo-pad,hi+pad,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  const step=Math.max(1,Math.floor(last.length/8));
+  const means=[];
+  last.forEach((g,i)=>{
+    const cx=L+(i+.5)*PW/last.length;
+    const m=mean(g.filter(Number.isFinite));
+    means.push({cx,m});
+    g.forEach(v=>{
+      if(!Number.isFinite(v))return;
+      x.fillStyle="#1f5f99";x.globalAlpha=.7;
+      x.beginPath();x.arc(cx,yy(v),2.5,0,Math.PI*2);x.fill();
+      x.globalAlpha=1;
+    });
+    if(i%step===0){
+      x.save();x.font="8px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#64748b";
+      x.fillText(String(subgroups.length-last.length+i+1),cx,T+PH+14);x.restore();
+    }
+  });
+  x.strokeStyle="#b66a00";x.lineWidth=1.2;x.beginPath();
+  means.forEach((mm,i)=>i?x.lineTo(mm.cx,yy(mm.m)):x.moveTo(mm.cx,yy(mm.m)));
+  x.stroke();x.lineWidth=1;
+}
+function drawSPCapabilityHist(canvasId,a,lsl,usl,target,m,within,overall){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Capability Histogram',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-40;
+  const bins=Math.max(8,Math.round(Math.sqrt(a.length)));
+  const specVals=[lsl,usl].filter(Number.isFinite);
+  const lo=Math.min(...a,...specVals),hi=Math.max(...a,...specVals),w=(hi-lo||1)/bins;
+  const count=Array(bins).fill(0);
+  a.forEach(v=>count[Math.min(bins-1,Math.max(0,Math.floor((v-lo)/w)))]++);
+  const maxCount=Math.max(...count);
+  const pdf=(v,mu,s)=>s>0?Math.exp(-((v-mu)**2)/(2*s*s))/(s*Math.sqrt(2*Math.PI)):0;
+  const peakPDF=Math.max(pdf(m,m,within),pdf(m,m,overall))||1;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-PH*v/(maxCount*1.15);
+  const yyPDF=v=>T+PH-PH*(v/peakPDF)*(maxCount*0.95)/(maxCount*1.15);
+  const xx=v=>L+(v-lo)/(hi-lo||1)*PW;
+  drawYAxisTicks(x,b,0,maxCount,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  count.forEach((v,i)=>{const bh=PH*v/(maxCount*1.15);x.fillStyle="#c8dcea";x.fillRect(L+i*PW/bins,T+PH-bh,PW/bins-1.5,bh)});
+  x.strokeStyle="#1f5f99";x.lineWidth=1.5;x.beginPath();
+  if(Number.isFinite(within)&&within>0)for(let i=0;i<=120;i++){const v=lo+i*(hi-lo)/120,py=yyPDF(pdf(v,m,within));i?x.lineTo(xx(v),py):x.moveTo(xx(v),py)}
+  x.stroke();
+  x.strokeStyle="#b66a00";x.setLineDash([4,3]);x.beginPath();
+  for(let i=0;i<=120;i++){const v=lo+i*(hi-lo)/120,py=yyPDF(pdf(v,m,overall));i?x.lineTo(xx(v),py):x.moveTo(xx(v),py)}
+  x.stroke();x.setLineDash([]);x.lineWidth=1;
+  [[lsl,"LSL","#b42318",false],[usl,"USL","#b42318",false],[m,"Mean","#2f7f5f",true]].forEach(([v,lbl,col,dash])=>{
+    if(!Number.isFinite(v))return; // spec limit not provided (one-sided tolerance)
+    if(v<lo-1e-9||v>hi+1e-9)return;
+    const px=xx(v);
+    x.save();x.strokeStyle=col;if(dash)x.setLineDash([3,3]);x.lineWidth=1.3;
+    x.beginPath();x.moveTo(px,T);x.lineTo(px,T+PH);x.stroke();x.setLineDash([]);x.lineWidth=1;
+    x.fillStyle=col;x.font="9px Segoe UI,Arial";x.textAlign="center";
+    x.fillText(lbl,px,T-3);x.restore();
+  });
+  if(Number.isFinite(target)&&target>=lo&&target<=hi){
+    const px=xx(target);
+    x.save();x.strokeStyle="#7c3aed";x.setLineDash([2,2]);
+    x.beginPath();x.moveTo(px,T);x.lineTo(px,T+PH);x.stroke();x.setLineDash([]);
+    x.fillStyle="#7c3aed";x.font="9px Segoe UI,Arial";x.textAlign="center";x.fillText("T",px,T-3);x.restore();
+  }
+  x.save();x.font="9px Segoe UI,Arial";x.textAlign="left";
+  x.strokeStyle="#1f5f99";x.beginPath();x.moveTo(L+PW-92,T+10);x.lineTo(L+PW-78,T+10);x.stroke();
+  x.fillStyle="#1d2733";x.fillText("Within",L+PW-74,T+13);
+  x.strokeStyle="#b66a00";x.setLineDash([4,3]);x.beginPath();x.moveTo(L+PW-92,T+22);x.lineTo(L+PW-78,T+22);x.stroke();x.setLineDash([]);
+  x.fillStyle="#1d2733";x.fillText("Overall",L+PW-74,T+25);x.restore();
+}
+function drawSPProbability(canvasId,aRaw){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Normal Prob Plot',300);
+  const a=[...aRaw].sort((p,q)=>p-q),n=a.length;
+  if(n<3){x.fillStyle="#64748b";x.fillText("(n<3)",50,60);return}
+  const m=mean(a),s=sd(a),L=48,T=32,PW=W-L-30,PH=H-T-55;
+  const z=a.map((_,i)=>Math.sqrt(2)*invErf(2*((i+.5)/n)-1));
+  const minx=Math.min(...z),maxx=Math.max(...z),miny=Math.min(...a),maxy=Math.max(...a);
+  const b={L,T,W:PW,H:PH};
+  const xx=v=>L+(v-minx)/(maxx-minx||1)*PW,yy=v=>T+PH-(v-miny)/(maxy-miny||1)*PH;
+  drawYAxisTicks(x,b,miny,maxy,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  x.strokeStyle="#b42318";x.lineWidth=1.3;x.beginPath();
+  x.moveTo(xx(minx),yy(m+s*minx));x.lineTo(xx(maxx),yy(m+s*maxx));x.stroke();x.lineWidth=1;
+  x.fillStyle="#1f5f99";a.forEach((v,i)=>{x.beginPath();x.arc(xx(z[i]),yy(v),2.5,0,Math.PI*2);x.fill()});
+  const {A2raw,p}=adNormalityTest(a);
+  const cls=p>=.05?"#067647":"#b42318";
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="left";x.fillStyle="#1d2733";
+  x.fillText(`N = ${n}`,L,T+PH+16);
+  x.fillText(`Mean = ${fmt(m,3)}`,L+80,T+PH+16);
+  x.fillText(`StDev = ${fmt(s,3)}`,L+170,T+PH+16);
+  x.fillText(`AD = ${fmt(A2raw,3)}`,L,T+PH+30);
+  x.fillStyle=cls;x.fillText(`P-Value = ${fmt(p,3)}`,L+80,T+PH+30);
+  x.restore();
+}
+function drawSPCapabilityPlot(canvasId,stat,lsl,usl,target){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Capability Plot',300);
+  const L=60,T=42,PW=W-L-30,PH=H-T-40;
+  const m=stat.mean;
+  const hasL=Number.isFinite(lsl),hasU=Number.isFinite(usl);
+  const hasW=Number.isFinite(stat.within);
+  const wLo=hasW?m-3*stat.within:m,wHi=hasW?m+3*stat.within:m;
+  const oLo=m-3*stat.overall,oHi=m+3*stat.overall;
+  const specVals=[hasL?lsl:null,hasU?usl:null,Number.isFinite(target)?target:null].filter(v=>v!==null);
+  const lo=Math.min(wLo,oLo,...(specVals.length?specVals:[wLo]));
+  const hi=Math.max(wHi,oHi,...(specVals.length?specVals:[wHi]));
+  const pad=(hi-lo)*0.05||1;
+  const rng=(hi+pad)-(lo-pad);
+  const xx=v=>L+(v-(lo-pad))/(rng||1)*PW;
+  const {ticks,step}=niceTicks(lo-pad,hi+pad,5),dec=tickDecimals(step);
+  x.strokeStyle="#475569";x.beginPath();x.moveTo(L,T+PH-8);x.lineTo(L+PW,T+PH-8);x.stroke();
+  x.save();x.font="9px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#64748b";
+  ticks.forEach(t=>x.fillText(fmt(t,dec),xx(t),T+PH+6));x.restore();
+  // shaded in-spec zone: both limits => between LSL/USL; USL only => left of USL; LSL only => right of LSL
+  x.fillStyle="rgba(180,35,24,0.06)";
+  if(hasL&&hasU){x.fillRect(xx(lsl),T,xx(usl)-xx(lsl),PH-10);}
+  else if(hasU){x.fillRect(L,T,xx(usl)-L,PH-10);}
+  else if(hasL){x.fillRect(xx(lsl),T,(L+PW)-xx(lsl),PH-10);}
+  x.strokeStyle="#b42318";x.lineWidth=1.5;
+  [hasL?lsl:null,hasU?usl:null].filter(v=>v!==null).forEach(v=>{x.beginPath();x.moveTo(xx(v),T);x.lineTo(xx(v),T+PH-8);x.stroke()});
+  x.lineWidth=1;
+  x.save();x.font="9px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#b42318";
+  if(hasL)x.fillText(`LSL ${fmt(lsl,3)}`,xx(lsl),T-3);
+  if(hasU)x.fillText(`USL ${fmt(usl,3)}`,xx(usl),T-3);x.restore();
+  const wY=T+40,barH=14;
+  if(hasW){x.fillStyle="#1f5f99";x.fillRect(xx(wLo),wY-barH/2,xx(wHi)-xx(wLo),barH);
+  x.strokeStyle="#0f3a5f";x.strokeRect(xx(wLo),wY-barH/2,xx(wHi)-xx(wLo),barH);}
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="right";x.fillStyle="#1d2733";
+  x.fillText("Within",L-4,wY+3);x.restore();
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="left";x.fillStyle="#1d2733";
+  x.fillText(`Cp=${fmt(stat.cp,2)}  Cpk=${fmt(stat.cpk,2)}`,L,wY+barH);x.restore();
+  const oY=T+95;
+  x.fillStyle="#b66a00";x.fillRect(xx(oLo),oY-barH/2,xx(oHi)-xx(oLo),barH);
+  x.strokeStyle="#7a4700";x.strokeRect(xx(oLo),oY-barH/2,xx(oHi)-xx(oLo),barH);
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="right";x.fillStyle="#1d2733";
+  x.fillText("Overall",L-4,oY+3);x.restore();
+  x.save();x.font="10px Segoe UI,Arial";x.textAlign="left";x.fillStyle="#1d2733";
+  x.fillText(`Pp=${fmt(stat.pp,2)}  Ppk=${fmt(stat.ppk,2)}`,L,oY+barH);x.restore();
+  const mx=xx(m);
+  x.save();x.strokeStyle="#2f7f5f";x.setLineDash([3,3]);x.lineWidth=1.3;
+  x.beginPath();x.moveTo(mx,T);x.lineTo(mx,T+PH-8);x.stroke();x.setLineDash([]);x.lineWidth=1;
+  x.fillStyle="#2f7f5f";x.font="9px Segoe UI,Arial";x.textAlign="center";
+  x.fillText(`Mean=${fmt(m,3)}`,mx,T+10);x.restore();
+  if(Number.isFinite(target)){
+    const tx=xx(target);
+    x.save();x.strokeStyle="#7c3aed";x.setLineDash([2,2]);
+    x.beginPath();x.moveTo(tx,T);x.lineTo(tx,T+PH-8);x.stroke();x.setLineDash([]);
+    x.fillStyle="#7c3aed";x.font="9px Segoe UI,Arial";x.textAlign="center";x.fillText("T",tx,T+22);x.restore();
+  }
+}
+function drawCapabilitySixpackForSet(idPrefix,data,subgroups,stat,lsl,usl,target,headerTitle,append){
+  const ids=[idPrefix+'1',idPrefix+'2',idPrefix+'3',idPrefix+'4',idPrefix+'5',idPrefix+'6'];
+  buildSixpackContainer(ids,headerTitle,!!append);
+  const isIndiv=subgroups.every(g=>g.length===1);
+  let ctrl;
+  if(isIndiv){
+    const a=data,st=computeIMRStats(a);
+    if(st){
+      ctrl={topS:a,topL:[st.lcl,st.m,st.ucl],topT:'I Chart',
+            botS:st.mr,botL:[st.mrlcl,st.mrbar,st.mrucl],botT:'Moving Range Chart'};
+    }
+  }else{
+    const n=Math.round(mean(subgroups.map(g=>g.length)));
+    const nc=Math.max(2,Math.min(10,n));
+    const A2=XBAR_A2[nc],D3=XBAR_D3[nc],D4=XBAR_D4[nc];
+    const means=subgroups.map(g=>mean(g));
+    const ranges=subgroups.map(g=>Math.max(...g)-Math.min(...g));
+    const xb=mean(means),rb=mean(ranges);
+    ctrl={topS:means,topL:[xb-A2*rb,xb,xb+A2*rb],topT:`Xbar Chart (n=${n})`,
+          botS:ranges,botL:[D3*rb,rb,D4*rb],botT:'R Chart'};
+  }
+  if(ctrl){
+    drawSPControl(ids[0],ctrl.topS,ctrl.topL,ctrl.topT);
+    drawSPControl(ids[1],ctrl.botS,ctrl.botL,ctrl.botT);
+  }
+  drawSPLast25(ids[2],subgroups);
+  drawSPCapabilityHist(ids[3],data,lsl,usl,target,stat.mean,stat.within,stat.overall);
+  drawSPProbability(ids[4],data);
+  drawSPCapabilityPlot(ids[5],stat,lsl,usl,target);
+}
+function runCapabilitySixpack(){
+  const col=document.getElementById('capCol').value;
+  const lsl=parseSpecInput('lsl'),usl=parseSpecInput('usl');
+  const hasL=Number.isFinite(lsl),hasU=Number.isFinite(usl);
+  if(!hasL&&!hasU)return alert("请至少填写 LSL 或 USL 其中一个规格限（单边公差只需填一个，另一个留空即可）");
+  if(hasL&&hasU&&usl<=lsl)return alert("请检查规格限（LSL 必须小于 USL）");
+  const method=document.getElementById('sigmaMethod').value;
+  const subCol=document.getElementById('subgroup').value;
+  const size=Number(document.getElementById('subSize').value)||5;
+  const target=parseSpecInput('target');
+  const limit=Number(document.getElementById('cpkLimit').value)||1.33;
+  const cavityCol=document.getElementById('cavityCol').value;
+  const stat=capabilityStats(col,lsl,usl,target,method,subCol,size,undefined,cavityCol||undefined);
+  if(!stat)return alert("有效数值不足（至少需要3个）");
+  if(cavityCol){
+    const ci=columns.indexOf(cavityCol),levels={};
+    rows.forEach(r=>{const k=r[ci];if(k!=="")(levels[k]??=[]).push(r)});
+    const lvlKeys=Object.keys(levels).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+    let first=true;
+    lvlKeys.forEach(lvl=>{
+      const st=capabilityStats(col,lsl,usl,target,method,subCol,size,levels[lvl]);
+      if(!st)return;
+      const {subgroups}=buildCapabilitySubgroups(col,method,subCol,size,levels[lvl]);
+      if(!subgroups.length)return;
+      const prefix='sp_'+lvl.replace(/[^a-z0-9]+/gi,'_')+'_';
+      drawCapabilitySixpackForSet(prefix,st.data,subgroups,st,lsl,usl,target,`Capability Sixpack — ${col} | ${cavityCol}=${lvl}`,!first);
+      first=false;
+    });
+    log(`Process Capability Sixpack (by ${cavityCol}): ${col}\n  LSL=${hasL?lsl:'N/A'}  USL=${hasU?usl:'N/A'}  Target=${Number.isFinite(target)?target:'—'}  Cpk-limit=${limit}\n  Levels: ${lvlKeys.join(', ')}\n`);
+  }else{
+    const {subgroups}=buildCapabilitySubgroups(col,method,subCol,size);
+    if(!subgroups.length)return alert("无法构造子组");
+    drawCapabilitySixpackForSet('sp_',stat.data,subgroups,stat,lsl,usl,target,`Capability Sixpack — ${col}`,false);
+    const cls=stat.cpk>=limit?'PASS':'FAIL';
+    log(`Process Capability Sixpack: ${col}\n  LSL=${hasL?lsl:'N/A'}  USL=${hasU?usl:'N/A'}  Target=${Number.isFinite(target)?target:'—'}\n  N=${stat.N}  Mean=${fmt(stat.mean,4)}  Within σ=${fmt(stat.within,4)}  Overall σ=${fmt(stat.overall,4)}\n  Cp=${fmt(stat.cp,3)}  Cpk=${fmt(stat.cpk,3)}  Pp=${fmt(stat.pp,3)}  Ppk=${fmt(stat.ppk,3)}  Cpm=${fmt(stat.cpm,3)}  → ${cls} (vs ${limit})\n`);
+  }
+}
+/* ============================================================
+   V5.4.1 — Two-Way ANOVA Gage R&R (Crossed, with Interaction)
+   Verified vs. Minitab (Micro-Vu OMM 24586): matches to 4 decimals
+   ============================================================ */
+function computeCrossedGageANOVA(data,alpha){
+  alpha=Number.isFinite(alpha)?alpha:0.25;
+  const parts=[...new Set(data.map(d=>d.p))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
+  const ops=[...new Set(data.map(d=>d.o))].sort();
+  const p=parts.length,k=ops.length;
+  if(p<2||k<2)return {error:'need at least 2 parts and 2 operators'};
+  const cells={};
+  parts.forEach(pt=>ops.forEach(op=>{cells[pt+"|"+op]=[]}));
+  data.forEach(d=>{const key=d.p+"|"+d.o;if(cells[key])cells[key].push(d.y)});
+  const sizes=Object.values(cells).map(v=>v.length);
+  const nMin=Math.min(...sizes),nMax=Math.max(...sizes);
+  if(nMin<1)return {error:'empty (part, operator) cell(s)'};
+  if(nMin!==nMax)return {error:`unbalanced design (cell sizes ${nMin}..${nMax}); ANOVA-based GRR requires balanced data`};
+  const n=nMin;
+  if(n<2)return {error:'need at least 2 replicates per (part, operator) cell'};
+  const grand=mean(data.map(d=>d.y));
+  const partMean={},opMean={},cellMean={};
+  parts.forEach(pt=>{partMean[pt]=mean(data.filter(d=>d.p===pt).map(d=>d.y))});
+  ops.forEach(op=>{opMean[op]=mean(data.filter(d=>d.o===op).map(d=>d.y))});
+  parts.forEach(pt=>ops.forEach(op=>{cellMean[pt+"|"+op]=mean(cells[pt+"|"+op])}));
+  let SSp=0;parts.forEach(pt=>SSp+=(partMean[pt]-grand)**2);SSp*=k*n;
+  let SSo=0;ops.forEach(op=>SSo+=(opMean[op]-grand)**2);SSo*=p*n;
+  let SSpo=0;parts.forEach(pt=>ops.forEach(op=>{SSpo+=(cellMean[pt+"|"+op]-partMean[pt]-opMean[op]+grand)**2}));SSpo*=n;
+  let SSe=0;data.forEach(d=>{SSe+=(d.y-cellMean[d.p+"|"+d.o])**2});
+  const SSt=data.reduce((s,d)=>s+(d.y-grand)**2,0);
+  const DFp=p-1,DFo=k-1,DFpo=(p-1)*(k-1),DFe=p*k*(n-1),DFt=p*k*n-1;
+  const MSp=SSp/DFp,MSo=SSo/DFo,MSpo=SSpo/DFpo,MSe=DFe>0?SSe/DFe:0;
+  const F_p_full  = MSpo>0?MSp/MSpo:NaN;
+  const F_o_full  = MSpo>0?MSo/MSpo:NaN;
+  const F_po_full = MSe >0?MSpo/MSe:NaN;
+  const P_p_full  = Number.isFinite(F_p_full)?fTestP(F_p_full,DFp,DFpo):NaN;
+  const P_o_full  = Number.isFinite(F_o_full)?fTestP(F_o_full,DFo,DFpo):NaN;
+  const P_po_full = Number.isFinite(F_po_full)?fTestP(F_po_full,DFpo,DFe):NaN;
+  const useInteraction=!Number.isFinite(P_po_full)||P_po_full<=alpha;
+  const anovaFull={
+    Part:{DF:DFp,SS:SSp,MS:MSp,F:F_p_full,P:P_p_full},
+    Operator:{DF:DFo,SS:SSo,MS:MSo,F:F_o_full,P:P_o_full},
+    'Part*Operator':{DF:DFpo,SS:SSpo,MS:MSpo,F:F_po_full,P:P_po_full},
+    Repeatability:{DF:DFe,SS:SSe,MS:MSe},
+    Total:{DF:DFt,SS:SSt}
+  };
+  let anovaUsed,varComp;
+  if(useInteraction){
+    anovaUsed=anovaFull;
+    const var_r =MSe;
+    const var_po=Math.max(0,(MSpo-MSe)/n);
+    const var_o =Math.max(0,(MSo-MSpo)/(n*p));
+    const var_p =Math.max(0,(MSp-MSpo)/(n*k));
+    varComp={repeat:var_r,interaction:var_po,operator:var_o,part:var_p,
+      totalGRR:var_r+var_o+var_po,reprod:var_o+var_po,
+      total:var_r+var_o+var_po+var_p,hasInteraction:true};
+  }else{
+    const SSe_r=SSe+SSpo,DFe_r=DFe+DFpo,MSe_r=SSe_r/DFe_r;
+    const F_p_r=MSe_r>0?MSp/MSe_r:NaN;
+    const F_o_r=MSe_r>0?MSo/MSe_r:NaN;
+    const P_p_r=Number.isFinite(F_p_r)?fTestP(F_p_r,DFp,DFe_r):NaN;
+    const P_o_r=Number.isFinite(F_o_r)?fTestP(F_o_r,DFo,DFe_r):NaN;
+    anovaUsed={
+      Part:{DF:DFp,SS:SSp,MS:MSp,F:F_p_r,P:P_p_r},
+      Operator:{DF:DFo,SS:SSo,MS:MSo,F:F_o_r,P:P_o_r},
+      Repeatability:{DF:DFe_r,SS:SSe_r,MS:MSe_r},
+      Total:{DF:DFt,SS:SSt}
+    };
+    const var_r=MSe_r;
+    const var_o=Math.max(0,(MSo-MSe_r)/(n*p));
+    const var_p=Math.max(0,(MSp-MSe_r)/(n*k));
+    varComp={repeat:var_r,interaction:0,operator:var_o,part:var_p,
+      totalGRR:var_r+var_o,reprod:var_o,total:var_r+var_o+var_p,hasInteraction:false};
+  }
+  const vt=varComp.total||1;
+  const pctCont={
+    totalGRR:100*varComp.totalGRR/vt,repeat:100*varComp.repeat/vt,
+    reprod:100*varComp.reprod/vt,operator:100*varComp.operator/vt,
+    interaction:100*varComp.interaction/vt,part:100*varComp.part/vt
+  };
+  const sd={
+    totalGRR:Math.sqrt(varComp.totalGRR),repeat:Math.sqrt(varComp.repeat),
+    reprod:Math.sqrt(varComp.reprod),operator:Math.sqrt(varComp.operator),
+    interaction:Math.sqrt(varComp.interaction),part:Math.sqrt(varComp.part),
+    total:Math.sqrt(varComp.total)
+  };
+  const K=6;
+  const sv={
+    totalGRR:K*sd.totalGRR,repeat:K*sd.repeat,reprod:K*sd.reprod,
+    operator:K*sd.operator,interaction:K*sd.interaction,part:K*sd.part,total:K*sd.total
+  };
+  const st_=sd.total||1;
+  const pctSV={
+    totalGRR:100*sd.totalGRR/st_,repeat:100*sd.repeat/st_,reprod:100*sd.reprod/st_,
+    operator:100*sd.operator/st_,interaction:100*sd.interaction/st_,part:100*sd.part/st_,total:100
+  };
+  const ndc=sd.totalGRR>0?Math.floor(1.41*sd.part/sd.totalGRR):NaN;
+  return {parts,ops,p,k,n,grand,cells,cellMean,partMean,opMean,
+    anovaFull,anovaUsed,useInteraction,alpha,varComp,pctCont,sd,sv,pctSV,ndc};
+}
+function grrPctTol(sd,tol){
+  if(!Number.isFinite(tol)||tol<=0)return null;
+  return {
+    totalGRR:100*6*sd.totalGRR/tol,repeat:100*6*sd.repeat/tol,reprod:100*6*sd.reprod/tol,
+    operator:100*6*sd.operator/tol,interaction:100*6*sd.interaction/tol,
+    part:100*6*sd.part/tol,total:100*6*sd.total/tol
+  };
+}
+/* ---------- Gage R&R Sixpack (uses ANOVA-based components) ---------- */
+function drawGRRComponents(canvasId,res,tolPct){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Components of Variation',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-55;
+  const groups=['Gage R&R','Repeat','Reprod','Part-to-Part'];
+  const series=tolPct?['%Contribution','%StudyVar','%Tolerance']:['%Contribution','%StudyVar'];
+  const data={
+    '%Contribution':[res.pctCont.totalGRR,res.pctCont.repeat,res.pctCont.reprod,res.pctCont.part],
+    '%StudyVar':   [res.pctSV.totalGRR,  res.pctSV.repeat,  res.pctSV.reprod,  res.pctSV.part]
+  };
+  if(tolPct)data['%Tolerance']=[tolPct.totalGRR,tolPct.repeat,tolPct.reprod,tolPct.part];
+  const allVals=series.flatMap(s=>data[s]);
+  const hiRaw=Math.max(...allVals);
+  const hi=Math.max(hiRaw*1.15,10);
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-v/hi*PH;
+  drawYAxisTicks(x,b,0,hi,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  const groupW=PW/groups.length,barSlots=series.length+1,barW=groupW/barSlots;
+  const colors=['#1f5f99','#2f7f5f','#b66a00'];
+  groups.forEach((g,gi)=>{
+    series.forEach((s,si)=>{
+      const v=data[s][gi];
+      const px=L+gi*groupW+(si+0.5)*barW;
+      const bh=Math.max(0,PH*v/hi);
+      x.fillStyle=colors[si];x.fillRect(px,T+PH-bh,barW*0.85,bh);
+      x.save();x.font="8.5px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#1d2733";
+      x.fillText(fmt(v,1),px+barW*0.425,T+PH-bh-3);x.restore();
+    });
+    x.save();x.font="9.5px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#111827";
+    x.fillText(g,L+(gi+0.5)*groupW,T+PH+14);x.restore();
+  });
+  x.save();x.font="9px Segoe UI,Arial";x.textAlign="left";
+  const lgW=90;
+  series.forEach((s,si)=>{
+    x.fillStyle=colors[si];x.fillRect(L+si*lgW,T+PH+28,10,8);
+    x.fillStyle="#1d2733";x.fillText(s,L+si*lgW+14,T+PH+35);
+  });
+  x.restore();
+}
+function drawGRRRChartByOp(canvasId,res){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'R Chart by Operator',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-40;
+  const {parts,ops,cells,n}=res;
+  const nc=Math.max(2,Math.min(10,n));
+  const D3=XBAR_D3[nc]||0,D4=XBAR_D4[nc]||3.267;
+  const opRanges=ops.map(o=>parts.map(p=>{const g=cells[p+"|"+o];return g&&g.length>1?Math.max(...g)-Math.min(...g):(g&&g.length===1?0:NaN)}));
+  const allR=opRanges.flat().filter(Number.isFinite);
+  if(!allR.length){x.fillStyle="#64748b";x.fillText("(no replicates)",L,T+PH/2);return}
+  const rbar=mean(allR),ucl=D4*rbar,lcl=D3*rbar;
+  const maxY=Math.max(ucl,...allR)*1.15||1;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-v/maxY*PH;
+  drawYAxisTicks(x,b,0,maxY,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  [[lcl,'LCL','#b42318'],[rbar,'R̄','#2f7f5f'],[ucl,'UCL','#b42318']].forEach(([v,n_,col])=>{
+    x.strokeStyle=col;x.beginPath();x.moveTo(L,yy(v));x.lineTo(L+PW,yy(v));x.stroke();
+    x.save();x.font="9px Segoe UI,Arial";x.fillStyle=col;x.textAlign="right";
+    x.fillText(`${n_}=${fmt(v,3)}`,L+PW-4,yy(v)-2);x.restore();
+  });
+  const opW=PW/ops.length;
+  ops.forEach((o,oi)=>{
+    if(oi>0){x.save();x.strokeStyle="#cbd5e1";x.setLineDash([2,2]);
+      x.beginPath();x.moveTo(L+oi*opW,T);x.lineTo(L+oi*opW,T+PH);x.stroke();x.restore()}
+    const rgs=opRanges[oi];
+    const xx=i=>L+oi*opW+(i+0.5)*opW/parts.length;
+    x.strokeStyle="#1f5f99";x.lineWidth=1.2;x.beginPath();let started=false;
+    rgs.forEach((v,i)=>{if(!Number.isFinite(v))return;if(!started){x.moveTo(xx(i),yy(v));started=true}else x.lineTo(xx(i),yy(v))});
+    x.stroke();x.lineWidth=1;
+    rgs.forEach((v,i)=>{if(!Number.isFinite(v))return;
+      x.fillStyle=(v>ucl||v<lcl)?'#b42318':'#1f5f99';
+      x.beginPath();x.arc(xx(i),yy(v),2.5,0,Math.PI*2);x.fill();
+    });
+    x.save();x.font="9.5px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#111827";
+    x.fillText(String(o),L+oi*opW+opW/2,T+PH+14);x.restore();
+  });
+}
+function drawGRRXbarByOp(canvasId,res){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Xbar Chart by Operator',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-40;
+  const {parts,ops,cells,cellMean,n}=res;
+  const nc=Math.max(2,Math.min(10,n));
+  const A2=XBAR_A2[nc]||0.577;
+  const opMeansMat=ops.map(o=>parts.map(p=>{const v=cellMean[p+"|"+o];return Number.isFinite(v)?v:NaN}));
+  const allM=opMeansMat.flat().filter(Number.isFinite);
+  if(!allM.length){x.fillStyle="#64748b";x.fillText("(no data)",L,T+PH/2);return}
+  const grandMean=mean(allM);
+  const rSet=Object.values(cells).filter(v=>v.length>1).map(v=>Math.max(...v)-Math.min(...v));
+  const rbar=rSet.length?mean(rSet):0;
+  const ucl=grandMean+A2*rbar,lcl=grandMean-A2*rbar;
+  const lo=Math.min(lcl,...allM),hi=Math.max(ucl,...allM);
+  const pad=(hi-lo)*0.1||1;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-(v-(lo-pad))/((hi+pad)-(lo-pad)||1)*PH;
+  drawYAxisTicks(x,b,lo-pad,hi+pad,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  [[lcl,'LCL','#b42318'],[grandMean,'X̄̄','#2f7f5f'],[ucl,'UCL','#b42318']].forEach(([v,n_,col])=>{
+    x.strokeStyle=col;x.beginPath();x.moveTo(L,yy(v));x.lineTo(L+PW,yy(v));x.stroke();
+    x.save();x.font="9px Segoe UI,Arial";x.fillStyle=col;x.textAlign="right";
+    x.fillText(`${n_}=${fmt(v,3)}`,L+PW-4,yy(v)-2);x.restore();
+  });
+  const opW=PW/ops.length;
+  ops.forEach((o,oi)=>{
+    if(oi>0){x.save();x.strokeStyle="#cbd5e1";x.setLineDash([2,2]);
+      x.beginPath();x.moveTo(L+oi*opW,T);x.lineTo(L+oi*opW,T+PH);x.stroke();x.restore()}
+    const ms=opMeansMat[oi];
+    const xx=i=>L+oi*opW+(i+0.5)*opW/parts.length;
+    x.strokeStyle="#1f5f99";x.lineWidth=1.2;x.beginPath();let started=false;
+    ms.forEach((v,i)=>{if(!Number.isFinite(v))return;if(!started){x.moveTo(xx(i),yy(v));started=true}else x.lineTo(xx(i),yy(v))});
+    x.stroke();x.lineWidth=1;
+    ms.forEach((v,i)=>{if(!Number.isFinite(v))return;
+      x.fillStyle=(v>ucl||v<lcl)?'#b42318':'#1f5f99';
+      x.beginPath();x.arc(xx(i),yy(v),2.5,0,Math.PI*2);x.fill();
+    });
+    x.save();x.font="9.5px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#111827";
+    x.fillText(String(o),L+oi*opW+opW/2,T+PH+14);x.restore();
+  });
+}
+function drawGRRByPart(canvasId,res,data){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Measurement by Part',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-40;
+  const {parts}=res;
+  const allY=data.map(d=>d.y);
+  if(!allY.length){x.fillStyle="#64748b";x.fillText("(no data)",L,T+PH/2);return}
+  const lo=Math.min(...allY),hi=Math.max(...allY),pad=(hi-lo)*0.1||1;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-(v-(lo-pad))/((hi+pad)-(lo-pad)||1)*PH;
+  drawYAxisTicks(x,b,lo-pad,hi+pad,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  const step=Math.max(1,Math.floor(parts.length/10));
+  const means=[];
+  parts.forEach((p,pi)=>{
+    const cx=L+(pi+0.5)*PW/parts.length;
+    const pts=data.filter(d=>d.p===p).map(d=>d.y);
+    pts.forEach(v=>{
+      x.fillStyle="#1f5f99";x.globalAlpha=0.55;
+      x.beginPath();x.arc(cx,yy(v),2.6,0,Math.PI*2);x.fill();x.globalAlpha=1;
+    });
+    const m=mean(pts);means.push({cx,m});
+    x.strokeStyle="#b42318";x.lineWidth=1.5;x.beginPath();x.moveTo(cx-9,yy(m));x.lineTo(cx+9,yy(m));x.stroke();x.lineWidth=1;
+    if(pi%step===0){x.save();x.font="8.5px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#111827";x.fillText(String(p),cx,T+PH+14);x.restore()}
+  });
+  x.strokeStyle="#b42318";x.lineWidth=1.3;x.beginPath();
+  means.forEach((m,i)=>i?x.lineTo(m.cx,yy(m.m)):x.moveTo(m.cx,yy(m.m)));
+  x.stroke();x.lineWidth=1;
+}
+function drawGRRByOp(canvasId,res,data){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Measurement by Operator',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-40;
+  const {ops}=res;
+  const allY=data.map(d=>d.y);
+  if(!allY.length){x.fillStyle="#64748b";x.fillText("(no data)",L,T+PH/2);return}
+  const lo=Math.min(...allY),hi=Math.max(...allY),pad=(hi-lo)*0.1||1;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-(v-(lo-pad))/((hi+pad)-(lo-pad)||1)*PH;
+  drawYAxisTicks(x,b,lo-pad,hi+pad,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  const means=[];
+  ops.forEach((o,oi)=>{
+    const cx=L+(oi+0.5)*PW/ops.length;
+    const pts=data.filter(d=>d.o===o).map(d=>d.y);
+    pts.forEach(v=>{
+      x.fillStyle="#1f5f99";x.globalAlpha=0.55;
+      x.beginPath();x.arc(cx,yy(v),2.6,0,Math.PI*2);x.fill();x.globalAlpha=1;
+    });
+    const m=mean(pts);means.push({cx,m});
+    x.strokeStyle="#b42318";x.lineWidth=1.5;x.beginPath();x.moveTo(cx-12,yy(m));x.lineTo(cx+12,yy(m));x.stroke();x.lineWidth=1;
+    x.save();x.font="9.5px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#111827";x.fillText(String(o),cx,T+PH+14);x.restore();
+  });
+  x.strokeStyle="#b42318";x.lineWidth=1.3;x.beginPath();
+  means.forEach((m,i)=>i?x.lineTo(m.cx,yy(m.m)):x.moveTo(m.cx,yy(m.m)));
+  x.stroke();x.lineWidth=1;
+}
+function drawGRRInteraction(canvasId,res){
+  const [c,x,W,H]=setupSixpackCanvas(canvasId,'Part * Operator Interaction',300);
+  const L=48,T=32,PW=W-L-30,PH=H-T-55;
+  const {parts,ops,cellMean}=res;
+  const allM=[];
+  const opLines=ops.map(o=>parts.map(p=>{const v=cellMean[p+"|"+o];if(Number.isFinite(v))allM.push(v);return Number.isFinite(v)?v:NaN}));
+  if(!allM.length){x.fillStyle="#64748b";x.fillText("(no data)",L,T+PH/2);return}
+  const lo=Math.min(...allM),hi=Math.max(...allM),pad=(hi-lo)*0.1||1;
+  const b={L,T,W:PW,H:PH};
+  const yy=v=>T+PH-(v-(lo-pad))/((hi+pad)-(lo-pad)||1)*PH;
+  const xx=i=>L+(parts.length<=1?PW/2:i*PW/(parts.length-1));
+  drawYAxisTicks(x,b,lo-pad,hi+pad,yy,4);
+  x.strokeStyle="#475569";x.strokeRect(L,T,PW,PH);
+  const colors=['#1f5f99','#2f7f5f','#b66a00','#7c3aed','#b42318','#0891b2'];
+  opLines.forEach((line,oi)=>{
+    const color=colors[oi%colors.length];
+    x.strokeStyle=color;x.lineWidth=1.5;x.beginPath();let started=false;
+    line.forEach((v,i)=>{if(!Number.isFinite(v))return;if(!started){x.moveTo(xx(i),yy(v));started=true}else x.lineTo(xx(i),yy(v))});
+    x.stroke();x.lineWidth=1;
+    line.forEach((v,i)=>{if(!Number.isFinite(v))return;
+      x.fillStyle=color;x.beginPath();x.arc(xx(i),yy(v),3,0,Math.PI*2);x.fill();
+    });
+  });
+  const step=Math.max(1,Math.floor(parts.length/10));
+  parts.forEach((p,i)=>{if(i%step!==0)return;
+    x.save();x.font="8.5px Segoe UI,Arial";x.textAlign="center";x.fillStyle="#111827";x.fillText(String(p),xx(i),T+PH+14);x.restore();
+  });
+  x.save();x.font="9px Segoe UI,Arial";x.textAlign="left";
+  const lgW=Math.max(60,PW/Math.max(ops.length,1));
+  ops.forEach((o,oi)=>{
+    const color=colors[oi%colors.length];
+    const px=L+oi*lgW;
+    x.strokeStyle=color;x.lineWidth=1.5;x.beginPath();x.moveTo(px,T+PH+30);x.lineTo(px+14,T+PH+30);x.stroke();x.lineWidth=1;
+    x.fillStyle=color;x.beginPath();x.arc(px+7,T+PH+30,3,0,Math.PI*2);x.fill();
+    x.fillStyle="#1d2733";x.fillText(String(o),px+18,T+PH+33);
+  });
+  x.restore();
+}
+function drawGRRSixpackANOVA(res,tol,vc,pc,oc){
+  const data=[];
+  const {parts,ops,cells}=res;
+  parts.forEach(p=>ops.forEach(o=>{(cells[p+"|"+o]||[]).forEach(y=>data.push({y,p,o}))}));
+  const tolPct=grrPctTol(res.sd,tol);
+  buildSixpackContainer(['grr1','grr2','grr3','grr4','grr5','grr6'],`Gage R&R Sixpack — ${vc} by ${pc}, ${oc}`,false);
+  drawGRRComponents('grr1',res,tolPct);
+  drawGRRRChartByOp('grr2',res);
+  drawGRRXbarByOp('grr3',res);
+  drawGRRByPart('grr4',res,data);
+  drawGRRByOp('grr5',res,data);
+  drawGRRInteraction('grr6',res);
+}
+
+function loadDemo(){
+  snapshot('载入示例数据（覆盖工作表）');
+  columns=["Measurement","Subgroup","Part","Operator","Response","Factor"];
+  rows=[];let k=0;
+  for(let sg=1;sg<=10;sg++)for(let j=0;j<3;j++){const x=(10+0.025*Math.sin(k*1.4)+0.008*((k%3)-1)).toFixed(3);rows.push([x,sg,"P"+((k%5)+1),["A","B","C"][k%3],(20+1.8*Number(x)+((k%4)-1.5)).toFixed(3),["Low","High"][k%2]]);k++}
+  renderWorksheet();log("Demo dataset loaded.\n");showTab('worksheet')
+}
+renderWorksheet();renderSession();
+
+/* ============================================================
+   V5.5.0 — Bilingual Layer (中文 / English) — EN/CH toggle
+   Design: non-invasive runtime translation layer.
+   - All existing rendering code stays in Chinese (single source of truth).
+   - A phrase dictionary + DOM walker + MutationObserver translate the UI
+     to English on demand, and restore the original Chinese on switch back.
+   - Worksheet cells and Session log are excluded (user data / audit trail).
+   ============================================================ */
+let LANG = (function(){try{return localStorage.getItem('quastat_lang')||'zh'}catch(e){return 'zh'}})();
+
+/* Chinese -> English phrase dictionary (applied longest-first) */
+const I18N_PAIRS = [
+  /* ---- header / topbar ---- */
+  ["撤销工作表上一步操作（编辑单元格、导入、新增/清空等）","Undo the last worksheet action (cell edit, import, add/clear, etc.)"],
+  ["重复上一次点击的左侧栏功能","Repeat the last tool clicked in the left sidebar"],
+  ["选择“重复上一步”的行为","Choose the behaviour of “Repeat Last Step”"],
+  ["↩ 撤销上一步","↩ Undo Last Step"],
+  ["↻ 重复上一步","↻ Repeat Last Step"],
+  ["仅重新打开","Reopen only"],
+  ["保留参数并运行","Keep parameters & run"],
+  ["载入示例","Load Demo"],
+  ["保存项目","Save Project"],
+  ["恢复项目","Restore Project"],
+  ["导出 Session","Export Session"],
+  ["独立质量统计分析工作台","Independent Quality Analytics Workbench"],
+
+  /* ---- sidebar ---- */
+  ["基础统计","Basic Statistics"],
+  ["质量工程","Quality Engineering"],
+  ["控制图","Control Charts"],
+  ["导入 CSV / 粘贴","Import CSV / Paste"],
+  ["描述性统计","Descriptive Statistics"],
+  ["正态性检验","Normality Test"],
+  ["过程能力","Process Capability"],
+  ["Gage R&R（交叉法，ANOVA基础版）","Gage R&R (Crossed, ANOVA method)"],
+  ["单因素 ANOVA","One-Way ANOVA"],
+  ["线性回归","Linear Regression"],
+  ["主效应分析 Main Effects Analysis","Main Effects Analysis"],
+  ["主效应分析","Main Effects Analysis"],
+  ["DOE 全因子设计生成器","DOE Full Factorial Design Generator"],
+  ["DOE 设计生成器","DOE Design Generator"],
+  ["Session 输出","Session Output"],
+  ["直方图 Histogram","Histogram"],
+  ["箱线图 Boxplot","Boxplot"],
+  ["单值图 Individual Value Plot","Individual Value Plot"],
+  ["散点图 Scatter Plot","Scatter Plot"],
+  ["点图 Dot Plot","Dot Plot"],
+  ["时间序列图 Time Series Plot","Time Series Plot"],
+  ["Pareto 图","Pareto Chart"],
+  ["直方图","Histogram"],
+  ["箱线图","Boxplot"],
+  ["单值图","Individual Value Plot"],
+  ["散点图","Scatter Plot"],
+  ["点图","Dot Plot"],
+  ["时间序列图","Time Series Plot"],
+  ["t 检验","t-Test"],
+  ["双样本 t 检验","Two-Sample t-Test"],
+  ["工作表","Worksheet"],
+  ["数据","Data"],
+  ["输出","Output"],
+  ["图表窗口","Chart Window"],
+  ["图表","Charts"],
+  ["分析","Analysis"],
+
+  /* ---- worksheet ---- */
+  ["双击列名可修改；单元格可直接编辑。缺失值留空。","Double-click a column header to rename it; cells are directly editable. Leave blanks for missing values."],
+  ["新增10行","Add 10 Rows"],
+  ["新增列","Add Column"],
+  ["清空工作表","Clear worksheet"],
+  ["确定清空工作表？","Clear the worksheet?"],
+  ["清空输出","Clear Output"],
+  ["清空","Clear"],
+  ["新列名","New column name"],
+
+  /* ---- import ---- */
+  ["导入 CSV / TSV","Import CSV / TSV"],
+  ["粘贴包含表头的数据","Paste data including the header row"],
+  ["导入并覆盖工作表","Import & Overwrite Worksheet"],
+  ["追加数据的表头必须与当前工作表一致","The header of appended data must match the current worksheet"],
+  ["追加数据","Append Data"],
+  ["支持 Excel 复制粘贴。第一行默认作为列名。","Supports copy-paste from Excel. The first row is used as column names."],
+  ["至少需要表头和一行数据","At least a header row and one data row are required"],
+  ["分隔符","Delimiter"],
+  ["自动识别","Auto-detect"],
+  ["逗号","Comma"],
+  ["分号","Semicolon"],
+
+  /* ---- charts / graph builder ---- */
+  ["运行统计分析后，这里显示图表。","Charts appear here after an analysis is run."],
+  ["选择变量后生成图形。","Select variables, then generate the graph."],
+  ["导出高清 PNG","Export Hi-Res PNG"],
+  ["堆叠显示（全部）","Stacked (all)"],
+  ["单个查看","Single view"],
+  ["分层视图：","Stratified view:"],
+  ["图形预览","Graph Preview"],
+  ["生成图形","Generate Graph"],
+  ["设置参数后运行分析。","Set the parameters, then run the analysis."],
+  ["运行分析","Run Analysis"],
+
+  /* ---- analysis form labels ---- */
+  ["正态过程能力分析","Normal Process Capability Analysis"],
+  ["Anderson–Darling 正态性检验","Anderson–Darling Normality Test"],
+  ["Xbar-R 控制图","Xbar-R Control Chart"],
+  ["I-MR 控制图","I-MR Control Chart"],
+  ["LSL（单边公差可留空）","LSL (leave blank for one-sided)"],
+  ["USL（单边公差可留空）","USL (leave blank for one-sided)"],
+  ["留空=仅USL单边","blank = USL-only, one-sided"],
+  ["留空=仅LSL单边","blank = LSL-only, one-sided"],
+  ["目标值（可选）","Target (optional)"],
+  ["判定标准 Cpk","Acceptance criterion Cpk"],
+  ["组内标准差估算方式","Within-subgroup StDev estimation method"],
+  ["单值 MR(2)（移动极差，Minitab 默认）","Individuals MR(2) (moving range, Minitab default)"],
+  ["整体标准差（不分子组，此时 Cpk = Ppk）","Overall StDev (no subgrouping; Cpk = Ppk)"],
+  ["整体标准差（不分子组）","Overall StDev (no subgrouping)"],
+  ["按子组列分组（","By subgroup column ("],
+  ["按子组列分组","By subgroup column"],
+  ["指定子组大小（","Fixed subgroup size ("],
+  ["指定子组大小","Fixed subgroup size"],
+  ["子组列（估算方式=按列分组时使用）","Subgroup column (used when method = by column)"],
+  ["子组大小 n（估算方式=指定大小时使用，2–10）","Subgroup size n (used when method = fixed size, 2–10)"],
+  ["按 Cavity（或其它列）分组比较 Cpk（可选）","Compare Cpk by Cavity (or another column) — optional"],
+  ["按 Cavity（或其它列）分层（可选，不合并）","Stratify by Cavity (or another column) — optional, not pooled"],
+  ["无（合并为一张图）","None (pooled into one chart)"],
+  ["组内标准差估算方式会直接影响 Cp/Cpk（Pp/Ppk 始终用整体标准差，不受此设置影响）。选择「按 Cavity 分组比较」后，会在结果下方额外给出每个 Cavity 单独的 Cp/Cpk 对比表和图。","The within-subgroup StDev method directly affects Cp/Cpk (Pp/Ppk always use the overall StDev and are unaffected). If “Compare by Cavity” is selected, a per-cavity Cp/Cpk comparison table and chart are added below the results."],
+  ["✅ 支持单边公差：LSL、USL 只需填写一个，另一个留空即可。单边时 Cp/Pp 不适用（显示\"—\"），Cpk/Ppk 自动按 Cpu/Ppu（仅USL）或 Cpl/Ppl（仅LSL）计算，标签仍显示为 Cpk/Ppk。","✅ One-sided tolerances supported: enter only LSL or only USL and leave the other blank. For one-sided specs Cp/Pp are not applicable (shown as “—”); Cpk/Ppk are computed as Cpu/Ppu (USL only) or Cpl/Ppl (LSL only), with the labels kept as Cpk/Ppk."],
+  ["📊 生成 Capability Sixpack（六合一）","📊 Generate Capability Sixpack"],
+  ["Minitab 六合一：Xbar/I + R/MR + Last 25 + Capability Histogram + Normal Prob Plot + Capability Plot","Minitab-style sixpack: Xbar/I + R/MR + Last 25 + Capability Histogram + Normal Prob Plot + Capability Plot"],
+  ["选择分层列后，将按该列的每个取值单独计算子组均值/极差、控制限并各自出图，不再合并到一张图中。","When a stratification column is selected, subgroup means/ranges and control limits are computed separately for each level and plotted individually instead of being pooled into one chart."],
+  ["选择分层列后，将按该列的每个取值单独计算单值/移动极差、控制限并各自出图（组内按原始行序计算移动极差）。","When a stratification column is selected, individuals/moving ranges and control limits are computed separately for each level and plotted individually (moving ranges follow the original row order within each level)."],
+  ["因子列（可多选，依次添加）","Factor columns (multi-select, add one by one)"],
+  ["分组列（可多层）","Grouping column(s) — multi-level"],
+  ["时间/顺序列（可选）","Time / order column (optional)"],
+  ["频数列（可选）","Frequency column (optional)"],
+  ["公差（可选）","Tolerance (optional)"],
+  ["显示累计百分比","Show cumulative %"],
+  ["显示异常值","Show outliers"],
+  ["显示均值线","Show mean line"],
+  ["移动平均窗口","Moving average window"],
+  ["连接数据点","Connect data points"],
+  ["选择分组列","Select grouping column"],
+  ["按行顺序","By row order"],
+  ["自动计数","Auto count"],
+  ["分箱数量","Number of bins"],
+  ["拟合线","Fitted line"],
+  ["线性","Linear"],
+  ["小数位","Decimal places"],
+  ["类别列","Category column"],
+  ["数值列","Value column"],
+  ["测量列","Measurement column"],
+  ["检验员列","Operator column"],
+  ["零件列","Part column"],
+  ["响应列","Response column"],
+  ["因子列","Factor column"],
+  ["子组列","Subgroup column"],
+  ["X 预测变量","X predictor"],
+  ["Y 响应","Y response"],
+  ["X 列","X column"],
+  ["Y 列","Y column"],
+  ["样本1","Sample 1"],
+  ["样本2","Sample 2"],
+  ["因子数","Number of factors"],
+  ["重复次数","Replicates"],
+  ["随机化","Randomize"],
+  ["变量","Variable"],
+  ["添加","Add"],
+
+  /* ---- results / notes ---- */
+  ["按 |Effect|（各水平均值的最大值−最小值）降序排列；总体均值 Grand Mean = ","Sorted by |Effect| (max − min of level means), descending; Grand Mean = "],
+  ["Effect 越大，该因子对响应的影响越显著；结合工程判断与 ANOVA/DOE 结果共同判读。","The larger the Effect, the stronger the factor's influence on the response; interpret together with engineering judgement and ANOVA/DOE results."],
+  ["P-value 使用常见 Stephens 近似；边界样本可能与商业软件显示存在细微差异。","The P-value uses the common Stephens approximation; borderline samples may differ slightly from commercial software."],
+  ["P-value 基于 Welch–Satterthwaite 自由度的精确 t 分布（不完全 Beta 函数）。","The P-value is based on the exact t distribution with Welch–Satterthwaite degrees of freedom (incomplete beta function)."],
+  ["P 值基于精确 F 分布（不完全 Beta 函数），非近似值。α=0.05 判定：","The P-value is based on the exact F distribution (incomplete beta function), not an approximation. Decision at α=0.05: "],
+  ["因子显著影响响应","the factor significantly affects the response"],
+  ["未见显著影响","no significant effect detected"],
+  ["未拒绝正态性","Normality not rejected"],
+  ["拒绝正态性","Normality rejected"],
+  ["✅ 该 ANOVA 引擎已与 Minitab (Micro-Vu OMM 24586 数据集) 逐项校准，%Contribution / %StudyVar / %Tolerance / ndc 完全一致到小数点后 4 位。","✅ This ANOVA engine has been item-by-item verified against Minitab (Micro-Vu OMM 24586 dataset): %Contribution / %StudyVar / %Tolerance / ndc all match to 4 decimal places."],
+  ["下方 6 幅图为 Minitab 标准 ","The 6 charts below form the standard Minitab "],
+  ["：Components of Variation / R Chart by Operator / Xbar Chart by Operator / Measurement by Part / Measurement by Operator / Part×Operator Interaction。",": Components of Variation / R Chart by Operator / Xbar Chart by Operator / Measurement by Part / Measurement by Operator / Part×Operator Interaction."],
+  [" · 填写「公差」可显示 %Tolerance 列"," · Enter a “Tolerance” to display the %Tolerance column"],
+  ["含交互项模型 (with interaction)","With-interaction model"],
+  ["不含交互项模型 (reduced)","Reduced model (no interaction)"],
+  ["，保留交互项",", interaction term retained"],
+  ["，已合并到 Repeatability",", pooled into Repeatability"],
+  ["优秀 Acceptable (AIAG ","Acceptable (AIAG "],
+  ["可接受 Marginal (AIAG 10–30%)","Marginal (AIAG 10–30%)"],
+  ["不可接受 Unacceptable (AIAG ","Unacceptable (AIAG "],
+  ["双边 Two-Sided","Two-Sided"],
+  ["单边(仅USL) One-Sided — USL only","One-Sided — USL only"],
+  ["单边(仅LSL) One-Sided — LSL only","One-Sided — LSL only"],
+  ["⚠️ 当前为单边公差：Cp/Pp 不适用（显示为\"—\"，Minitab 惯例），Cpk/Ppk 已按 ","⚠️ One-sided tolerance in use: Cp/Pp are not applicable (shown as “—”, per Minitab convention); Cpk/Ppk have been computed as "],
+  [" 计算，标签沿用 Cpk/Ppk。"," , with the labels kept as Cpk/Ppk."],
+  ["Cpu/Ppu（仅上限）","Cpu/Ppu (upper limit only)"],
+  ["Cpl/Ppl（仅下限）","Cpl/Ppl (lower limit only)"],
+  ["组内σ估算方式：","Within-σ estimation method: "],
+  ["未选择，已退回整体标准差","not selected — fell back to overall StDev"],
+  ["，末尾丢弃",", trailing "],
+  ["个不满子组的数据"," values discarded (incomplete subgroup)"],
+  ["个子组"," subgroups"],
+  ["，共",", "],
+  ["Xbar-R Summary — 按 ","Xbar-R Summary — stratified by "],
+  ["I-MR Summary — 按 ","I-MR Summary — stratified by "],
+  [" 分层"," "],
+  ["按 ","By "],
+  [" 分组比较"," — group comparison"],
+  ["每个 ","Each "],
+  [" 使用与上方相同的组内σ估算方式，仅在各自子集内独立计算。"," uses the same within-σ estimation method as above, computed independently within its own subset."],
+  [" 独立计算子组均值/极差与控制限，不与其它 "," gets independently computed subgroup means/ranges and control limits, not pooled with other "],
+  [" 合并（不使用整体合并的控制限）。图表窗口中可切换「堆叠显示」查看全部，或「单个查看」逐一切换。","  (pooled control limits are not used). In the Chart window you can switch between “Stacked (all)” and “Single view”."],
+  [" 使用其自身行序独立计算移动极差与控制限，不跨 "," computes moving ranges and control limits independently using its own row order, without mixing across "],
+  [" 混算。图表窗口中可切换「堆叠显示」查看全部，或「单个查看」逐一切换。",". In the Chart window you can switch between “Stacked (all)” and “Single view”."],
+  ["异常子组：","Out-of-control subgroups: "],
+  ["无 Test 1 异常","No Test 1 violations"],
+  ["异常子组","Out-of-control subgroups"],
+  ["异常点","Out-of-control points"],
+  ["已跳过 ","Skipped "],
+  [" 个分组（数值不足3个）。"," group(s) (fewer than 3 values)."],
+  [" 个分组（子组数不足2个，或子组大小不在支持的2–10范围内）。"," group(s) (fewer than 2 subgroups, or subgroup size outside the supported 2–10 range)."],
+  ["（分组较多，仅显示中位数标签）"," (many groups — only median labels are shown)"],
+  ["组数=","Groups="],
+  ["总样本数=","Total N="],
+  ["类别数=","Categories="],
+  ["总频数=","Total frequency="],
+  ["移动平均窗口=","MA window="],
+  ["各水平均值","Level means"],
+  ["水平数","Levels"],
+  ["子组数","Subgroups"],
+  ["子组大小n","Subgroup size n"],
+  ["判定 (AIAG)","Verdict (AIAG)"],
+  ["判定线 Cpk=","Limit Cpk="],
+  ["结论","Conclusion"],
+  ["判定","Verdict"],
+  ["因子","Factor"],
+
+  /* ---- alerts / logs ---- */
+  ["请至少填写 LSL 或 USL 其中一个规格限（单边公差只需填一个，另一个留空即可）","Please enter at least one spec limit, LSL or USL (for a one-sided tolerance enter one and leave the other blank)"],
+  ["请检查规格限（LSL 必须小于 USL）","Please check the spec limits (LSL must be smaller than USL)"],
+  ["有效数值不足（至少需要3个）","Not enough valid values (at least 3 required)"],
+  ["每个 ${grp} 分组内的子组数量都不足，无法出图","Not enough subgroups in each group to plot"],
+  [" 分组内的子组数量都不足，无法出图（至少需要两个子组，且子组大小需在2–10之间）"," has too few subgroups to plot (at least 2 subgroups are required and the subgroup size must be between 2 and 10)"],
+  [" 分组内的数值都不足3个，无法出图"," has fewer than 3 values, so no chart can be produced"],
+  ["当前版本支持子组大小2–10","This version supports subgroup sizes 2–10"],
+  ["至少需要两个子组","At least two subgroups are required"],
+  ["至少需要3个数值","At least 3 values are required"],
+  ["至少需要5个数值","At least 5 values are required"],
+  ["Gage R&R 需要至少 2 个零件和 2 个检验员","Gage R&R requires at least 2 parts and 2 operators"],
+  ["Gage R&R 计算失败：","Gage R&R calculation failed: "],
+  ["Gage R&R 数据不足","Not enough data for Gage R&R"],
+  ["请至少添加一个因子列","Please add at least one factor column"],
+  ["所选因子列均无有效多水平数据","None of the selected factor columns has valid multi-level data"],
+  ["响应列有效数值不足","Not enough valid values in the response column"],
+  ["有效数值不足","Not enough valid values"],
+  ["有效配对不足","Not enough valid pairs"],
+  ["分组数据不足","Not enough grouped data"],
+  ["没有有效数据","No valid data"],
+  ["没有有效类别","No valid categories"],
+  ["无法构造子组","Unable to build subgroups"],
+  ["样本不足","Sample size too small"],
+  ["数据不足","Not enough data"],
+  ["没有可撤销的操作。","There is no action to undo."],
+  ["没有可重复的操作，请先在左侧选择一个功能。","There is no action to repeat — please pick a tool from the left sidebar first."],
+  ["已保存到浏览器本地","Saved to browser local storage"],
+  ["未找到已保存项目","No saved project found"],
+  ["项目已恢复","Project restored"],
+  ["撤销操作：已恢复到「","Undo: restored to the state before “"],
+  ["」之前的状态","”"],
+  ["重复操作（保留参数并运行）：","Repeat (keep parameters & run): "],
+  ["重复操作（仅重新打开）：","Repeat (reopen only): "],
+  ["重复操作：","Repeat: "],
+  ["（该工具尚无历史参数，仅重新打开）"," (no stored parameters for this tool — reopened only)"],
+  ["图形","Graph"],
+  ["编辑单元格 ","Edit cell "],
+  ["重命名列 ","Rename column "],
+  ["导入 CSV（覆盖）","Import CSV (overwrite)"],
+  ["追加 CSV 数据","Append CSV data"],
+  ["载入示例数据（覆盖工作表）","Load demo data (overwrite worksheet)"],
+  ["恢复已保存项目（覆盖工作表）","Restore saved project (overwrite worksheet)"],
+  ["生成 DOE 设计（覆盖工作表）","Generate DOE design (overwrite worksheet)"],
+  ["个子组）"," subgroups)"],
+  ["是","Yes"],
+  ["否","No"],
+  ["无","None"]
+].sort((a,b)=>b[0].length-a[0].length);
+
+function zh2en(s){
+  let out=s;
+  for(const [zh,en] of I18N_PAIRS){ if(out.indexOf(zh)>=0) out=out.split(zh).join(en); }
+  /* tidy any residual CJK punctuation so mixed strings read naturally in English */
+  out=out.replace(/\uFF08/g,'(').replace(/\uFF09/g,')').replace(/\uFF0C/g,', ')
+         .replace(/\u3001/g,', ').replace(/\uFF1A/g,': ').replace(/\u3002/g,'. ')
+         .replace(/\uFF1B/g,'; ').replace(/\u300C/g,'\u201C').replace(/\u300D/g,'\u201D')
+         .replace(/\s+([,.;:)])/g,'$1').replace(/\s+$/,'');
+  return out;
+}
+const HAS_CJK=/[\u4e00-\u9fff]/;
+const I18N_SKIP_IDS=['worksheetTable','sessionBox','importText'];
+function i18nSkip(node){
+  let el=node.nodeType===3?node.parentElement:node;
+  while(el){
+    if(el.id&&I18N_SKIP_IDS.includes(el.id))return true;
+    if(el.classList&&el.classList.contains('no-i18n'))return true;
+    el=el.parentElement;
+  }
+  return false;
+}
+let _i18nRecords=[];   // {node, orig} for text nodes
+let _i18nAttrs=[];     // {el, attr, orig}
+let _i18nBusy=false;
+function translateTree(root){
+  if(!root)return;
+  _i18nBusy=true;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  const todo=[];
+  while(walker.nextNode()){const n=walker.currentNode;if(HAS_CJK.test(n.nodeValue)&&!i18nSkip(n))todo.push(n)}
+  todo.forEach(n=>{const o=n.nodeValue,t=zh2en(o);if(t!==o){_i18nRecords.push({node:n,orig:o});n.nodeValue=t}});
+  const els=root.nodeType===1?[root,...root.querySelectorAll('*')]:[...root.querySelectorAll('*')];
+  els.forEach(el=>{
+    if(!el.getAttribute||i18nSkip(el))return;
+    ['title','placeholder'].forEach(a=>{
+      const v=el.getAttribute(a);
+      if(v&&HAS_CJK.test(v)){const t=zh2en(v);if(t!==v){_i18nAttrs.push({el,attr:a,orig:v});el.setAttribute(a,t)}}
+    });
+  });
+  _i18nBusy=false;
+}
+function restoreTree(){
+  _i18nBusy=true;
+  _i18nRecords.forEach(r=>{try{r.node.nodeValue=r.orig}catch(e){}});
+  _i18nAttrs.forEach(r=>{try{r.el.setAttribute(r.attr,r.orig)}catch(e){}});
+  _i18nRecords=[];_i18nAttrs=[];
+  _i18nBusy=false;
+}
+const _i18nObserver=new MutationObserver(muts=>{
+  if(LANG!=='en'||_i18nBusy)return;
+  muts.forEach(m=>{m.addedNodes.forEach(n=>{if(n.nodeType===1)translateTree(n);else if(n.nodeType===3&&HAS_CJK.test(n.nodeValue)&&!i18nSkip(n)){const o=n.nodeValue,t=zh2en(o);if(t!==o){_i18nBusy=true;_i18nRecords.push({node:n,orig:o});n.nodeValue=t;_i18nBusy=false}}})});
+});
+function setLang(l,silent){
+  LANG=(l==='en')?'en':'zh';
+  try{localStorage.setItem('quastat_lang',LANG)}catch(e){}
+  restoreTree();
+  if(LANG==='en')translateTree(document.body);
+  const btn=document.getElementById('langBtn');
+  if(btn)btn.textContent=LANG==='en'?'🌐 中文':'🌐 EN';
+  document.documentElement.lang=LANG==='en'?'en':'zh-CN';
+  if(!silent)log(LANG==='en'?'Interface language switched to English.\n':'界面语言已切换为中文。\n');
+}
+function toggleLang(){setLang(LANG==='en'?'zh':'en')}
+
+/* native dialogs go through the same dictionary */
+const _alert=window.alert.bind(window),_confirm=window.confirm.bind(window),_prompt=window.prompt.bind(window);
+window.alert=m=>_alert(LANG==='en'&&typeof m==='string'?zh2en(m):m);
+window.confirm=m=>_confirm(LANG==='en'&&typeof m==='string'?zh2en(m):m);
+window.prompt=(m,d)=>_prompt(LANG==='en'&&typeof m==='string'?zh2en(m):m,d);
+
+/* boot the bilingual layer */
+_i18nObserver.observe(document.body,{childList:true,subtree:true});
+setLang(LANG,true);
+
+</script>
+</body>
+</html>
