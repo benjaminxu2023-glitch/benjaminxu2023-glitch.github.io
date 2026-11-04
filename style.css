@@ -8,6 +8,7 @@ header.site .name{font-weight:700;font-size:18px;color:#1d2733;text-decoration:n
 header.site nav a{margin-left:16px;text-decoration:none}
 h1{font-size:26px;line-height:1.35;margin:0 0 10px}
 h2{font-size:20px;margin:32px 0 12px}
+h3{font-size:16px;margin:20px 0 6px;color:#1d2733}
 p{margin:0 0 12px}
 .lead{font-size:17px;color:#3b4754}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:16px}

@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QuaStat · 轻量质量统计工作台</title>
-<meta name="description" content="QuaStat：单个 HTML 文件的质量统计分析工作台，数据只在本地浏览器中处理。">
+<title>QuaStat V5.9.0 · 轻量质量统计工作台</title>
+<meta name="description" content="QuaStat V5.9.0：单个 HTML 文件的质量统计分析工作台。过程能力与六图、控制图、Gage R&amp;R、假设检验、DOE，以及 PCS 过程能力研究报告。数据只在本地浏览器中处理。">
+<meta name="version" content="5.9.0">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -12,36 +13,95 @@
 <header class="site"><a class="name" href="/">Ben Xu</a><nav><a href="/quastat/">QuaStat</a><a href="https://x.com/benjaminxu2023" rel="me noopener">X</a></nav></header>
 <main>
 <h1>QuaStat</h1>
-<p class="lead">轻量的质量统计分析工作台。单个 HTML 文件，中英文界面可切换。</p>
+<p class="lead">轻量的质量统计分析工作台，单个 HTML 文件，中英文界面可切换。当前版本 <strong>V5.9.0</strong>。</p>
 <div class="cta"><a class="btn" href="/quastat/app/">在线打开</a></div>
-<p class="note">数据只在本地浏览器中处理，不会上传。推荐使用 Chrome 或 Edge。</p>
+<p class="note">数据只在本地浏览器中处理，不会上传。无需安装或构建，推荐使用 Chrome 或 Edge。</p>
 
 <h2>功能</h2>
+
+<h3>工作表与数据工具</h3>
+<ul>
+  <li>导入 xlsx / csv / txt / tsv，或直接粘贴表格</li>
+  <li>堆叠列、拆分列、排序、计算器，撤销上一步</li>
+  <li>空白单元格按缺失处理（不当 0）；按项目隔离的设置记忆，切换数据集不会串参数</li>
+</ul>
+
+<h3>基础统计</h3>
 <ul>
   <li>描述性统计</li>
-  <li>正态性检验（Anderson–Darling）</li>
-  <li>过程能力：Cp/Cpk、Pp/Ppk、Cpm，可按 Cavity 分组比较</li>
-  <li>Xbar-R / I-MR 控制图</li>
-  <li>Gage R&amp;R</li>
-  <li>t 检验、单因素 ANOVA、线性回归</li>
-  <li>主效应分析、DOE 设计生成器</li>
-  <li>常用图形和 Graph Builder</li>
+  <li>正态性检验（Anderson–Darling，输出 A²、A²* 与 P 值）</li>
+  <li>容差区间</li>
 </ul>
-<p>无需安装或构建，在浏览器中打开即可使用。</p>
+
+<h3>过程能力</h3>
+<ul>
+  <li>Cp / Cpk、Pp / Ppk、Cpm，支持单侧公差</li>
+  <li>组内 σ 可选单值 MR(2)、按子组列、指定子组大小，或直接用整体标准差</li>
+  <li>按 Cavity（或任意列）分组比较各腔能力，并按腔出 Capability Sixpack 六图</li>
+  <li>非正态与变换：Box-Cox、Johnson 变换、Weibull、Lognormal</li>
+</ul>
+
+<h3>控制图</h3>
+<ul>
+  <li>计量型：Xbar-R、Xbar-S、I-MR、I-MR-R/S</li>
+  <li>计数型：P / NP / C / U，样本量不等时用逐点控制限</li>
+  <li>判异规则 Test 1–4；可按 Cavity 分组，各腔独立定限</li>
+</ul>
+
+<h3>测量系统分析</h3>
+<ul>
+  <li>Gage R&amp;R（交叉 ANOVA，含交互项，α=0.25 取舍规则；%Contribution、%StudyVar、%Tolerance、ndc）</li>
+  <li>计数型一致性分析（Attribute Agreement，κ）</li>
+</ul>
+
+<h3>假设检验</h3>
+<ul>
+  <li>单样本 t、双样本 t（Welch）、配对 t</li>
+  <li>双方差：Bonett、Levene、F 检验</li>
+  <li>单比率、双比率、卡方关联</li>
+  <li>等效性检验 TOST</li>
+</ul>
+
+<h3>质量工程与设计</h3>
+<ul>
+  <li>单因素 ANOVA（含 Tukey 多重比较）</li>
+  <li>一元线性回归</li>
+  <li>主效应分析</li>
+  <li>DOE 设计生成器：2<sup>k</sup> 全因子、部分因子、响应曲面 CCD，可设重复与区组</li>
+  <li>DOE 因子分析</li>
+</ul>
+
+<h3>图形与 Graph Builder</h3>
+<ul>
+  <li>直方图、箱线图、点图、单值图、区间图、散点图、时间序列图、多变异图、概率图、Pareto 图</li>
+  <li>每张图都可在 Graph Builder 里选列、选分组后重绘，并导出高清 PNG</li>
+</ul>
+
+<h3>PCS 过程能力研究报告</h3>
+<p>医疗器械包装常用的过程能力研究报告（PCS），从数据到可签核的文档一条链路：</p>
+<ul>
+  <li>导入 PCS 版式的 Excel，自动识别项目信息与各尺寸规格；识别不了的字段会明确列出并留空，不猜</li>
+  <li>Cpk 总结图、原始数据页、每腔一页 Capability Sixpack、正态性检验页</li>
+  <li>导出 A4 横向报告，打印或另存为 PDF；也可导出数据到 Excel</li>
+</ul>
 
 <figure><img src="/quastat/img/worksheet.png" alt="QuaStat 工作表（内置示例数据）" width="1280" height="900" loading="lazy"><figcaption>工作表：内置示例数据（「载入示例」）</figcaption></figure>
 <figure><img src="/quastat/img/capability.png" alt="QuaStat 过程能力分析结果（内置示例数据）" width="1280" height="900" loading="lazy"><figcaption>过程能力分析：示例数据，LSL 9.9 / USL 10.1，组内σ 默认用单值 MR(2)</figcaption></figure>
 
 <h2>数值验证</h2>
-<p>计算结果与多个独立来源逐项比对，作为持续集成的硬门禁：任何一项超出容差，测试即失败。</p>
+<p>统计结果与多个互相独立的来源逐项比对，作为持续集成的硬门禁：任何一项超出容差，测试即失败。</p>
 <ul>
   <li>独立实现：Python（numpy / scipy / statsmodels）与 R（base R、nortest）</li>
   <li>NIST StRD 认证数据集：单变量统计 9 个、单因素 ANOVA 11 个、线性回归 Norris</li>
   <li>NIST/SEMATECH e-Handbook 例题（过程能力、t 检验数据、控制图系数）</li>
-  <li>Monte Carlo（已知真值，检验 d2、c4 等常数）</li>
+  <li>Monte Carlo（固定种子，用已知真值检验 d2、c4 等常数）</li>
+  <li>Minitab 官方 Methods and formulas（按其公式独立实现并比对）</li>
+  <li>一份本地 Minitab 报告逐项对照（数据不入库，持续集成中跳过）</li>
 </ul>
-<p>当前版本在持续集成中 1006 项检查全部通过。主要约定：过程能力默认用单值 MR(2) 估算组内σ；空白单元格按缺失处理（不当 0）；Cpm 按 Minitab 的定义计算。</p>
-<p>尚未有公开认证数据对照的部分：Gage R&amp;R、Welch t 检验（只与 Python、R 独立实现比对），主效应与 DOE 设计（只与 Python 比对）；回归只支持一元线性。</p>
+<p>合计 <strong>1066 项</strong>核对全部通过（含本地 Minitab 对照 60 项；持续集成环境中无该报告，跑 <strong>1006 项</strong>，同样全部通过）。另有 140 项旧版核验与 33 项界面/回归测试一并通过。</p>
+<p>方法与公式按 Minitab 官方文档实现，数值经上述多源交叉验证；这不等于逐图逐版面与 Minitab 输出核对过。界面版式与图形形态仍以本工具自身设计为准。</p>
+<p>主要约定：过程能力默认用单值 MR(2) 估算组内σ；空白单元格按缺失处理；Cpm 按 Minitab 的定义计算。</p>
+<p>尚未有公开认证数据对照的部分：Gage R&amp;R、Welch t 检验（只与 Python、R 独立实现比对），主效应与 DOE 设计（只与 Python 比对）；回归只支持一元线性。非正态能力（Weibull / Lognormal / Johnson）只给整体 Pp/Ppk 与预期 PPM。</p>
 <p class="note">这是软件数值验证，不等同于医疗器械质量体系下的正式软件确认（validation）。用于正式记录前，请按贵司程序自行确认。</p>
 <div class="cta"><a class="btn" href="/quastat/app/">在线打开</a></div>
 </main>
